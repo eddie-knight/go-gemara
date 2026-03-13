@@ -315,7 +315,7 @@ func TestEntityTypeString(t *testing.T) {
 	}{
 		{Human, "Human"},
 		{Software, "Software"},
-		{SoftwareAssisted, "Software-Assisted"},
+		{SoftwareAssisted, "Software Assisted"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {

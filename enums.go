@@ -174,23 +174,23 @@ var (
 	}
 
 	artifactTypeToString = map[ArtifactType]string{
-		ControlCatalogArtifact:  "Control Catalog",
-		EvaluationLogArtifact:   "Evaluation Log",
-		GuidanceCatalogArtifact: "Guidance Catalog",
-		MappingDocumentArtifact: "Mapping Document",
+		ControlCatalogArtifact:  "ControlCatalog",
+		EvaluationLogArtifact:   "EvaluationLog",
+		GuidanceCatalogArtifact: "GuidanceCatalog",
+		MappingDocumentArtifact: "MappingDocument",
 		PolicyArtifact:          "Policy",
-		ThreatCatalogArtifact:   "Threat Catalog",
-		VectorCatalogArtifact:   "Vector Catalog",
+		ThreatCatalogArtifact:   "ThreatCatalog",
+		VectorCatalogArtifact:   "VectorCatalog",
 	}
 
 	stringToArtifactType = map[string]ArtifactType{
-		"Control Catalog":  ControlCatalogArtifact,
-		"Evaluation Log":   EvaluationLogArtifact,
-		"Guidance Catalog": GuidanceCatalogArtifact,
-		"Mapping Document": MappingDocumentArtifact,
-		"Policy":           PolicyArtifact,
-		"Threat Catalog":   ThreatCatalogArtifact,
-		"Vector Catalog":   VectorCatalogArtifact,
+		"ControlCatalog":  ControlCatalogArtifact,
+		"EvaluationLog":   EvaluationLogArtifact,
+		"GuidanceCatalog": GuidanceCatalogArtifact,
+		"MappingDocument": MappingDocumentArtifact,
+		"Policy":          PolicyArtifact,
+		"ThreatCatalog":   ThreatCatalogArtifact,
+		"VectorCatalog":   VectorCatalogArtifact,
 	}
 
 	entityTypeToString = map[EntityType]string{
@@ -202,23 +202,23 @@ var (
 	stringToEntityType = map[string]EntityType{
 		"Human":             Human,
 		"Software":          Software,
-		"Software-Assisted": SoftwareAssisted,
+		"Software Assisted": SoftwareAssisted,
 	}
 
 	entryTypeToString = map[EntryType]string{
 		EntryTypeGuideline:             "Guideline",
 		EntryTypeStatement:             "Statement",
 		EntryTypeControl:               "Control",
-		EntryTypeAssessmentRequirement: "Assessment Requirement",
+		EntryTypeAssessmentRequirement: "AssessmentRequirement",
 		EntryTypeVector:                "Vector",
 	}
 
 	stringToEntryType = map[string]EntryType{
-		"Guideline":              EntryTypeGuideline,
-		"Statement":              EntryTypeStatement,
-		"Control":                EntryTypeControl,
-		"Assessment Requirement": EntryTypeAssessmentRequirement,
-		"Vector":                 EntryTypeVector,
+		"Guideline":             EntryTypeGuideline,
+		"Statement":             EntryTypeStatement,
+		"Control":               EntryTypeControl,
+		"AssessmentRequirement": EntryTypeAssessmentRequirement,
+		"Vector":                EntryTypeVector,
 	}
 
 	confidenceLevelToString = map[ConfidenceLevel]string{
