@@ -3,6 +3,8 @@ package gemara
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/gemaraproj/go-gemara/internal/loaders"
 )
@@ -50,7 +52,9 @@ const (
 	NeedsReview
 	NotApplicable
 	Unknown
+)
 
+const (
 	ControlCatalogArtifact ArtifactType = iota
 	EvaluationLogArtifact
 	GuidanceCatalogArtifact
@@ -58,27 +62,37 @@ const (
 	PolicyArtifact
 	ThreatCatalogArtifact
 	VectorCatalogArtifact
+)
 
+const (
 	Human EntityType = iota
 	Software
 	SoftwareAssisted
+)
 
+const (
 	LifecycleActive Lifecycle = iota
 	LifecycleDraft
 	LifecycleDeprecated
 	LifecycleRetired
+)
 
+const (
 	EntryTypeGuideline EntryType = iota
 	EntryTypeStatement
 	EntryTypeControl
 	EntryTypeAssessmentRequirement
 	EntryTypeVector
+)
 
+const (
 	Undetermined ConfidenceLevel = iota
 	Low
 	Medium
 	High
+)
 
+const (
 	RelImplements RelationshipType = iota
 	RelImplementedBy
 	RelSupports
@@ -87,28 +101,38 @@ const (
 	RelSubsumes
 	RelNoMatch
 	RelRelatesTo
+)
 
+const (
 	MethodManual MethodType = iota
 	MethodBehavioral
 	MethodAutomated
 	MethodAutoremediation
 	MethodGate
+)
 
+const (
 	SeverityLow Severity = iota
 	SeverityMedium
 	SeverityHigh
 	SeverityCritical
+)
 
+const (
 	GuidanceStandard GuidanceType = iota
 	GuidanceRegulation
 	GuidanceBestPractice
 	GuidanceFramework
+)
 
+const (
 	RiskAppetiteZero RiskAppetite = iota
 	RiskAppetiteLow
 	RiskAppetiteModerate
 	RiskAppetiteHigh
+)
 
+const (
 	ModAdd ModType = iota
 	ModModify
 	ModRemove
@@ -330,7 +354,7 @@ func unmarshalYAMLEnum[T any](data []byte, m map[string]T, name string, dest *T)
 		*dest = val
 		return nil
 	}
-	return fmt.Errorf("invalid %s: %s", name, s)
+	return unknownEnumStringError(name, s, m)
 }
 
 func unmarshalJSONEnum[T any](data []byte, m map[string]T, name string, dest *T) error {
@@ -342,11 +366,24 @@ func unmarshalJSONEnum[T any](data []byte, m map[string]T, name string, dest *T)
 		*dest = val
 		return nil
 	}
-	return fmt.Errorf("invalid %s: %s", name, s)
+	return unknownEnumStringError(name, s, m)
+}
+
+// unknownEnumStringError builds an error for an invalid enum string, including valid values.
+func unknownEnumStringError[T any](name, got string, validMap map[string]T) error {
+	valid := make([]string, 0, len(validMap))
+	for k := range validMap {
+		valid = append(valid, k)
+	}
+	sort.Strings(valid)
+	return fmt.Errorf("invalid %s: %q (valid: %s)", name, got, strings.Join(valid, ", "))
 }
 
 func (r Result) String() string {
-	return toString[r]
+	if s, ok := toString[r]; ok {
+		return s
+	}
+	return fmt.Sprintf("Result(%d)", r)
 }
 
 // MarshalYAML ensures that Result is serialized as a string in YAML
@@ -370,7 +407,10 @@ func (r *Result) UnmarshalJSON(data []byte) error {
 }
 
 func (a ArtifactType) String() string {
-	return artifactTypeToString[a]
+	if s, ok := artifactTypeToString[a]; ok {
+		return s
+	}
+	return fmt.Sprintf("ArtifactType(%d)", a)
 }
 
 // MarshalYAML ensures that ArtifactType is serialized as a string in YAML
@@ -394,7 +434,10 @@ func (a *ArtifactType) UnmarshalJSON(data []byte) error {
 }
 
 func (e EntityType) String() string {
-	return entityTypeToString[e]
+	if s, ok := entityTypeToString[e]; ok {
+		return s
+	}
+	return fmt.Sprintf("EntityType(%d)", e)
 }
 
 // MarshalYAML ensures that EntityType is serialized as a string in YAML
@@ -418,7 +461,10 @@ func (e *EntityType) UnmarshalJSON(data []byte) error {
 }
 
 func (l Lifecycle) String() string {
-	return lifecycleToString[l]
+	if s, ok := lifecycleToString[l]; ok {
+		return s
+	}
+	return fmt.Sprintf("Lifecycle(%d)", l)
 }
 
 // MarshalYAML ensures that Lifecycle is serialized as a string in YAML
@@ -442,7 +488,10 @@ func (l *Lifecycle) UnmarshalJSON(data []byte) error {
 }
 
 func (e EntryType) String() string {
-	return entryTypeToString[e]
+	if s, ok := entryTypeToString[e]; ok {
+		return s
+	}
+	return fmt.Sprintf("EntryType(%d)", e)
 }
 
 // MarshalYAML ensures that EntryType is serialized as a string in YAML
@@ -466,7 +515,10 @@ func (e *EntryType) UnmarshalJSON(data []byte) error {
 }
 
 func (c ConfidenceLevel) String() string {
-	return confidenceLevelToString[c]
+	if s, ok := confidenceLevelToString[c]; ok {
+		return s
+	}
+	return fmt.Sprintf("ConfidenceLevel(%d)", c)
 }
 
 // MarshalYAML ensures that ConfidenceLevel is serialized as a string in YAML
@@ -490,7 +542,10 @@ func (c *ConfidenceLevel) UnmarshalJSON(data []byte) error {
 }
 
 func (r RelationshipType) String() string {
-	return relationshipTypeToString[r]
+	if s, ok := relationshipTypeToString[r]; ok {
+		return s
+	}
+	return fmt.Sprintf("RelationshipType(%d)", r)
 }
 
 // MarshalYAML ensures that RelationshipType is serialized as a string in YAML
@@ -514,7 +569,10 @@ func (r *RelationshipType) UnmarshalJSON(data []byte) error {
 }
 
 func (m MethodType) String() string {
-	return methodTypeToString[m]
+	if s, ok := methodTypeToString[m]; ok {
+		return s
+	}
+	return fmt.Sprintf("MethodType(%d)", m)
 }
 
 // MarshalYAML ensures that MethodType is serialized as a string in YAML
@@ -538,7 +596,10 @@ func (m *MethodType) UnmarshalJSON(data []byte) error {
 }
 
 func (s Severity) String() string {
-	return severityToString[s]
+	if str, ok := severityToString[s]; ok {
+		return str
+	}
+	return fmt.Sprintf("Severity(%d)", s)
 }
 
 // MarshalYAML ensures that Severity is serialized as a string in YAML
@@ -562,7 +623,10 @@ func (s *Severity) UnmarshalJSON(data []byte) error {
 }
 
 func (g GuidanceType) String() string {
-	return guidanceTypeToString[g]
+	if s, ok := guidanceTypeToString[g]; ok {
+		return s
+	}
+	return fmt.Sprintf("GuidanceType(%d)", g)
 }
 
 // MarshalYAML ensures that GuidanceType is serialized as a string in YAML
@@ -586,7 +650,10 @@ func (g *GuidanceType) UnmarshalJSON(data []byte) error {
 }
 
 func (r RiskAppetite) String() string {
-	return riskAppetiteToString[r]
+	if s, ok := riskAppetiteToString[r]; ok {
+		return s
+	}
+	return fmt.Sprintf("RiskAppetite(%d)", r)
 }
 
 // MarshalYAML ensures that RiskAppetite is serialized as a string in YAML
@@ -610,7 +677,10 @@ func (r *RiskAppetite) UnmarshalJSON(data []byte) error {
 }
 
 func (m ModType) String() string {
-	return modTypeToString[m]
+	if s, ok := modTypeToString[m]; ok {
+		return s
+	}
+	return fmt.Sprintf("ModType(%d)", m)
 }
 
 // MarshalYAML ensures that ModType is serialized as a string in YAML

@@ -1,6 +1,7 @@
 package gemara
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -364,5 +365,26 @@ func TestRelationshipTypeUnmarshalJSONInvalid(t *testing.T) {
 	err := r.UnmarshalJSON([]byte(`"invalid"`))
 	if err == nil {
 		t.Error("expected error for invalid RelationshipType")
+	}
+	// Error should include the invalid value and list valid values
+	if err != nil && err.Error() != "" {
+		if !strings.Contains(err.Error(), "invalid") {
+			t.Errorf("error should mention invalid: %s", err.Error())
+		}
+		if !strings.Contains(err.Error(), "valid:") {
+			t.Errorf("error should list valid values: %s", err.Error())
+		}
+	}
+}
+
+func TestResultStringUnknownValue(t *testing.T) {
+	// Out-of-range or unknown int should not return empty string
+	const unknown Result = 99
+	got := unknown.String()
+	if got == "" {
+		t.Error("String() for unknown Result should not return empty string")
+	}
+	if !strings.Contains(got, "99") {
+		t.Errorf("String() for unknown Result should include numeric value, got %q", got)
 	}
 }
