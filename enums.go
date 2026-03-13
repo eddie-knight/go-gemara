@@ -196,7 +196,7 @@ var (
 	entityTypeToString = map[EntityType]string{
 		Human:            "Human",
 		Software:         "Software",
-		SoftwareAssisted: "Software-Assisted",
+		SoftwareAssisted: "Software Assisted",
 	}
 
 	stringToEntityType = map[string]EntityType{
