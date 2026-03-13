@@ -136,12 +136,13 @@ install:
 	@go install ./...
 
 update-schema:
-	@echo " > Generating types from Gemara CUE package"
+	@echo " > Pulling down Gemara CUE package"
 	@cue def github.com/gemaraproj/gemara@$(SPECVERSION) --outfile schema.cue --force
 
 # Generate files from CUE schemas
 # Generates Go types from the Gemara CUE package with stable and experimental variants
 generate:
+	@echo " > Generating types from Gemara CUE package"
 	@cue exp gengotypes schema.cue
 	@mv cue_types_gen.go generated_types.go
 	@go run ./cmd/typestagger generated_types.go
