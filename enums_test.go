@@ -120,6 +120,7 @@ func TestArtifactTypeString(t *testing.T) {
 		{PolicyArtifact, "Policy"},
 		{ThreatCatalogArtifact, "ThreatCatalog"},
 		{VectorCatalogArtifact, "VectorCatalog"},
+		{RiskCatalogArtifact, "RiskCatalog"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {

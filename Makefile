@@ -10,7 +10,7 @@ GOFLAGS :=
 COVERFILE := coverage.out
 TESTCOVERAGE_THRESHOLD := 71
 GOLANGCI_LINT := golangci-lint
-SPECVERSION := v0.20.0
+SPECVERSION := v0.21.0
 
 .PHONY: all tidy fmtcheck fmt vet lint test testcov race coverage-check build install generate ci-local clean help
 
@@ -135,27 +135,23 @@ install:
 	@echo " > Installing module/binaries"
 	@go install ./...
 
+update-schema:
+	@echo " > Pulling down Gemara CUE package"
+	@cue def github.com/gemaraproj/gemara@$(SPECVERSION) --outfile schema.cue --force
+
 # Generate files from CUE schemas
 # Generates Go types from the Gemara CUE package with stable and experimental variants
-old-nonfunctional-generate:
+generate:
 	@echo " > Generating types from Gemara CUE package"
-	@cue def github.com/gemaraproj/gemara@$(SPECVERSION) --outfile schema.cue
-
-    # Required after using CUE Def to find the properly defined control types
-    # If running from darwin OS, add '' after -i
-	sed -i 's/let control_9 = control/let control_9 = #ControlEvaluation.control/' schema.cue
-
 	@cue exp gengotypes schema.cue
 	@mv cue_types_gen.go generated_types.go
 	@go run ./cmd/typestagger generated_types.go
-	@rm schema.cue
 
 genlocal:
 	@echo " > Generating types from 'gemara' package"
 	@cue exp gengotypes ../gemara:gemara
 	@mv ../gemara/cue_types_gemara_gen.go generated_types.go
 	@go run ./cmd/typestagger generated_types.go
-	@rm schema.cue
 
 # Runs the small subset used by CI for a quick local check
 ci-local: fmtcheck vet lint testcov coverage-check

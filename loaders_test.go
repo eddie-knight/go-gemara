@@ -335,6 +335,17 @@ func TestCatalog_LoadFile_UnsupportedFileType(t *testing.T) {
 	}
 }
 
+func TestCatalog_LoadFiles_NilImports(t *testing.T) {
+	c := &ControlCatalog{}
+	err := c.LoadFiles([]string{
+		"file://test-data/good-ccc.yaml",
+		"file://test-data/good-osps.yml",
+	})
+	require.NoError(t, err)
+	assert.Nil(t, c.Imports, "imports should remain nil when no source files contain imports")
+	assert.NotEmpty(t, c.Controls, "controls should be appended from both files")
+}
+
 func TestCatalog_LoadFiles(t *testing.T) {
 	tests := []struct {
 		name       string
