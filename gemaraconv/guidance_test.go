@@ -110,10 +110,6 @@ func TestGuidanceToOSCAL_Catalog(t *testing.T) {
 									Href: "#placeholder",
 									Rel:  "reference",
 								},
-								{
-									Href: "#placeholder",
-									Rel:  "reference",
-								},
 							},
 							Parts: &[]oscalTypes.Part{
 								{
@@ -305,7 +301,7 @@ func TestGuidanceToOSCAL_Catalog(t *testing.T) {
 						return a.ID < b.ID
 					})
 					if diff := cmp.Diff(tt.wantGroups, *catalog.Groups, cmpopts.IgnoreFields(oscalTypes.Link{}, "Href"), sortGroups, sortControls); diff != "" {
-						t.Errorf("group mismatch (-want +got):\n%s", diff)
+						t.Errorf("group mismatch diff(-want +got):\n%s", diff)
 					}
 				}
 			}
