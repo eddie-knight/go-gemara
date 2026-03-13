@@ -121,16 +121,6 @@ func TestPolicyDocument_LoadFile_URI(t *testing.T) {
 			wantErr:       true,
 			errorExpected: "failed to fetch URL; response status: 404 Not Found",
 		},
-		{
-			name:       "Valid URI with valid data",
-			sourcePath: "https://raw.githubusercontent.com/ossf/security-baseline/refs/heads/main/baseline/OSPS-AC.yaml",
-			wantErr:    false,
-		},
-		{
-			name:       "Valid URI with valid YAML (may not match schema)",
-			sourcePath: "https://github.com/ossf/security-insights-spec/releases/download/v2.0.0/template-minimum.yml",
-			wantErr:    false,
-		},
 	}
 
 	for _, tt := range tests {
@@ -236,16 +226,6 @@ func TestGuidanceCatalog_LoadFile_URI(t *testing.T) {
 			sourcePath:    srv.URL + "/nonexistent.yaml",
 			wantErr:       true,
 			errorExpected: "failed to fetch URL; response status: 404 Not Found",
-		},
-		{
-			name:       "Valid URI with valid data",
-			sourcePath: "https://raw.githubusercontent.com/ossf/security-baseline/refs/heads/main/baseline/OSPS-AC.yaml",
-			wantErr:    false,
-		},
-		{
-			name:       "Valid URI with valid YAML (may not match schema)",
-			sourcePath: "https://github.com/ossf/security-insights-spec/releases/download/v2.0.0/template-minimum.yml",
-			wantErr:    false,
 		},
 	}
 
@@ -458,7 +438,7 @@ func TestCatalog_LoadNestedCatalog(t *testing.T) {
 		},
 		{
 			name:            "Non-conformant URI response",
-			sourcePath:      "https://google.com",
+			sourcePath:      "file://test-data/unsupported.txt",
 			nestedFieldName: "catalog",
 			wantErr:         true,
 		},
