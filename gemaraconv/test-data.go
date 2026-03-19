@@ -42,7 +42,7 @@ func guidanceWithExternalExtends() gemara.GuidanceCatalog {
 			},
 		},
 		GuidanceType: gemara.GuidanceFramework,
-		Families: []gemara.Group{
+		Groups: []gemara.Group{
 			{
 				Id:          "AC",
 				Title:       "Access Control",
@@ -51,9 +51,9 @@ func guidanceWithExternalExtends() gemara.GuidanceCatalog {
 		},
 		Guidelines: []gemara.Guideline{
 			{
-				Id:     "TEST-AC-1",
-				Title:  "Test Access Control Enhancement",
-				Family: "AC",
+				Id:    "TEST-AC-1",
+				Title: "Test Access Control Enhancement",
+				Group: "AC",
 				Extends: &gemara.EntryMapping{
 					ReferenceId: "NIST-800-53",
 					EntryId:     "AC-1",
@@ -92,7 +92,7 @@ func guidanceWithMerging() gemara.GuidanceCatalog {
 			},
 		},
 		GuidanceType: gemara.GuidanceFramework,
-		Families: []gemara.Group{
+		Groups: []gemara.Group{
 			{
 				Id:          "AC",
 				Title:       "Access Control",
@@ -101,9 +101,9 @@ func guidanceWithMerging() gemara.GuidanceCatalog {
 		},
 		Guidelines: []gemara.Guideline{
 			{
-				Id:     "TEST-AC-1",
-				Title:  "First Enhancement for AC-1",
-				Family: "AC",
+				Id:    "TEST-AC-1",
+				Title: "First Enhancement for AC-1",
+				Group: "AC",
 				Extends: &gemara.EntryMapping{
 					ReferenceId: "NIST-800-53",
 					EntryId:     "AC-1",
@@ -117,9 +117,9 @@ func guidanceWithMerging() gemara.GuidanceCatalog {
 				},
 			},
 			{
-				Id:     "TEST-AC-1-2",
-				Title:  "Second Enhancement for AC-1",
-				Family: "AC",
+				Id:    "TEST-AC-1-2",
+				Title: "Second Enhancement for AC-1",
+				Group: "AC",
 				Extends: &gemara.EntryMapping{
 					ReferenceId: "NIST-800-53",
 					EntryId:     "AC-1",
@@ -149,7 +149,7 @@ func guidanceWithLocalExtends() gemara.GuidanceCatalog {
 			},
 		},
 		GuidanceType: gemara.GuidanceFramework,
-		Families: []gemara.Group{
+		Groups: []gemara.Group{
 			{
 				Id:          "AC",
 				Title:       "Access Control",
@@ -158,14 +158,14 @@ func guidanceWithLocalExtends() gemara.GuidanceCatalog {
 		},
 		Guidelines: []gemara.Guideline{
 			{
-				Id:     "TEST-AC-1",
-				Title:  "Base Access Control",
-				Family: "AC",
+				Id:    "TEST-AC-1",
+				Title: "Base Access Control",
+				Group: "AC",
 			},
 			{
-				Id:     "TEST-AC-1-ENH",
-				Title:  "Enhanced Access Control",
-				Family: "AC",
+				Id:    "TEST-AC-1-ENH",
+				Title: "Enhanced Access Control",
+				Group: "AC",
 				Extends: &gemara.EntryMapping{
 					EntryId: "TEST-AC-1",
 				},
@@ -188,7 +188,7 @@ func guidanceWithMultiLevelNested() gemara.GuidanceCatalog {
 			},
 		},
 		GuidanceType: gemara.GuidanceFramework,
-		Families: []gemara.Group{
+		Groups: []gemara.Group{
 			{
 				Id:    "AC",
 				Title: "Access Control",
@@ -198,13 +198,13 @@ func guidanceWithMultiLevelNested() gemara.GuidanceCatalog {
 			{
 				Id:        "AC-1",
 				Title:     "Base Control",
-				Family:    "AC",
+				Group:     "AC",
 				Objective: "Base control objective",
 			},
 			{
-				Id:     "AC-1-ENH",
-				Title:  "First Enhancement",
-				Family: "AC",
+				Id:    "AC-1-ENH",
+				Title: "First Enhancement",
+				Group: "AC",
 				Extends: &gemara.EntryMapping{
 					EntryId: "AC-1",
 				},
@@ -216,9 +216,9 @@ func guidanceWithMultiLevelNested() gemara.GuidanceCatalog {
 				},
 			},
 			{
-				Id:     "AC-1-ENH-2",
-				Title:  "Second Enhancement",
-				Family: "AC",
+				Id:    "AC-1-ENH-2",
+				Title: "Second Enhancement",
+				Group: "AC",
 				Extends: &gemara.EntryMapping{
 					EntryId: "AC-1-ENH",
 				},

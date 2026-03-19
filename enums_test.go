@@ -232,6 +232,43 @@ func TestMethodTypeString(t *testing.T) {
 	}
 }
 
+func TestModeTypeString(t *testing.T) {
+	tests := []struct {
+		v        ModeType
+		expected string
+	}{
+		{ModeManual, "Manual"},
+		{ModeAutomated, "Automated"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			if got := tt.v.String(); got != tt.expected {
+				t.Errorf("String() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDispositionString(t *testing.T) {
+	tests := []struct {
+		v        Disposition
+		expected string
+	}{
+		{DispositionEnforced, "Enforced"},
+		{DispositionTolerated, "Tolerated"},
+		{DispositionClear, "Clear"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			if got := tt.v.String(); got != tt.expected {
+				t.Errorf("String() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestSeverityString(t *testing.T) {
 	tests := []struct {
 		v        Severity

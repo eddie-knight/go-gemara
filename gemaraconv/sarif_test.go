@@ -326,16 +326,16 @@ func makeAssessmentLog(entryID, description string, result gemara.Result, messag
 
 func makeCatalog(controlID, controlTitle, controlObjective, reqID, reqText, reqRecommendation string) *gemara.ControlCatalog {
 	return &gemara.ControlCatalog{
-		Families: []gemara.Group{
+		Groups: []gemara.Group{
 			{
 				Id:    "test-family",
-				Title: "Test Family",
+				Title: "Test Group",
 			},
 		},
 		Controls: []gemara.Control{
 			{
 				Id:        controlID,
-				Family:    "test-family",
+				Group:     "test-family",
 				Title:     controlTitle,
 				Objective: controlObjective,
 				AssessmentRequirements: []gemara.AssessmentRequirement{

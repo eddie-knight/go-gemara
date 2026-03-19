@@ -30,7 +30,7 @@ func GuidanceToOSCAL(g *gemara.GuidanceCatalog, guidanceDocHref string, opts ...
 
 	// Create catalog
 	// Return early for empty documents
-	if len(g.Families) == 0 {
+	if len(g.Groups) == 0 {
 		return oscal.Catalog{}, oscal.Profile{}, fmt.Errorf("document %s does not have defined families", g.Metadata.Id)
 	}
 
@@ -53,18 +53,18 @@ func GuidanceToOSCAL(g *gemara.GuidanceCatalog, guidanceDocHref string, opts ...
 	}
 
 	// Group guidelines by family
-	guidelinesByFamily := make(map[string][]gemara.Guideline)
+	guidelinesByGroup := make(map[string][]gemara.Guideline)
 	for _, guideline := range g.Guidelines {
 		// Skip guidelines that extend external controls - these belong only in the profile as alterations
 		if guideline.Extends != nil && guideline.Extends.ReferenceId != "" {
 			continue
 		}
-		guidelinesByFamily[guideline.Family] = append(guidelinesByFamily[guideline.Family], guideline)
+		guidelinesByGroup[guideline.Group] = append(guidelinesByGroup[guideline.Group], guideline)
 	}
 
 	var groups []oscal.Group
-	for _, family := range g.Families {
-		guidelines := guidelinesByFamily[family.Id]
+	for _, family := range g.Groups {
+		guidelines := guidelinesByGroup[family.Id]
 		if len(guidelines) > 0 {
 			groups = append(groups, createControlGroup(g, family, guidelines, resourcesMap))
 		}

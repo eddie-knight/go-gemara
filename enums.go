@@ -33,6 +33,15 @@ type RelationshipType int
 // MethodType enumerates the category of evaluation or enforcement method.
 type MethodType int
 
+// ModeType enumerates whether enforcement/evaluation is manual or automated.
+type ModeType int
+
+// Disposition enumerates the possible enforcement outcomes.
+type Disposition int
+
+// EnforcementStep is a reference to the code path that performed an enforcement action.
+type EnforcementStep string
+
 // Severity defines the allowed impact levels for a risk.
 type Severity int
 
@@ -110,6 +119,17 @@ const (
 	MethodAutomated
 	MethodAutoremediation
 	MethodGate
+)
+
+const (
+	ModeManual ModeType = iota
+	ModeAutomated
+)
+
+const (
+	DispositionEnforced Disposition = iota
+	DispositionTolerated
+	DispositionClear
 )
 
 const (
@@ -274,6 +294,28 @@ var (
 		"Automated":       MethodAutomated,
 		"Autoremediation": MethodAutoremediation,
 		"Gate":            MethodGate,
+	}
+
+	modeTypeToString = map[ModeType]string{
+		ModeManual:    "Manual",
+		ModeAutomated: "Automated",
+	}
+
+	stringToModeType = map[string]ModeType{
+		"Manual":    ModeManual,
+		"Automated": ModeAutomated,
+	}
+
+	dispositionToString = map[Disposition]string{
+		DispositionEnforced: "Enforced",
+		DispositionTolerated: "Tolerated",
+		DispositionClear:    "Clear",
+	}
+
+	stringToDisposition = map[string]Disposition{
+		"Enforced":  DispositionEnforced,
+		"Tolerated": DispositionTolerated,
+		"Clear":     DispositionClear,
 	}
 
 	severityToString = map[Severity]string{
@@ -596,6 +638,60 @@ func (m *MethodType) UnmarshalYAML(data []byte) error {
 // UnmarshalJSON ensures that MethodType can be deserialized from a JSON string
 func (m *MethodType) UnmarshalJSON(data []byte) error {
 	return unmarshalJSONEnum(data, stringToMethodType, "MethodType", m)
+}
+
+func (m ModeType) String() string {
+	if s, ok := modeTypeToString[m]; ok {
+		return s
+	}
+	return fmt.Sprintf("ModeType(%d)", m)
+}
+
+// MarshalYAML ensures that ModeType is serialized as a string in YAML
+func (m ModeType) MarshalYAML() (interface{}, error) {
+	return marshalYAMLString(m)
+}
+
+// MarshalJSON ensures that ModeType is serialized as a string in JSON
+func (m ModeType) MarshalJSON() ([]byte, error) {
+	return marshalJSONString(m)
+}
+
+// UnmarshalYAML ensures that ModeType can be deserialized from a YAML string
+func (m *ModeType) UnmarshalYAML(data []byte) error {
+	return unmarshalYAMLEnum(data, stringToModeType, "ModeType", m)
+}
+
+// UnmarshalJSON ensures that ModeType can be deserialized from a JSON string
+func (m *ModeType) UnmarshalJSON(data []byte) error {
+	return unmarshalJSONEnum(data, stringToModeType, "ModeType", m)
+}
+
+func (d Disposition) String() string {
+	if s, ok := dispositionToString[d]; ok {
+		return s
+	}
+	return fmt.Sprintf("Disposition(%d)", d)
+}
+
+// MarshalYAML ensures that Disposition is serialized as a string in YAML
+func (d Disposition) MarshalYAML() (interface{}, error) {
+	return marshalYAMLString(d)
+}
+
+// MarshalJSON ensures that Disposition is serialized as a string in JSON
+func (d Disposition) MarshalJSON() ([]byte, error) {
+	return marshalJSONString(d)
+}
+
+// UnmarshalYAML ensures that Disposition can be deserialized from a YAML string
+func (d *Disposition) UnmarshalYAML(data []byte) error {
+	return unmarshalYAMLEnum(data, stringToDisposition, "Disposition", d)
+}
+
+// UnmarshalJSON ensures that Disposition can be deserialized from a JSON string
+func (d *Disposition) UnmarshalJSON(data []byte) error {
+	return unmarshalJSONEnum(data, stringToDisposition, "Disposition", d)
 }
 
 func (s Severity) String() string {
