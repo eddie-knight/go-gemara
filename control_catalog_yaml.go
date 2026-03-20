@@ -9,10 +9,10 @@ func (c *ControlCatalog) UnmarshalYAML(data []byte) error {
 		Groups   []Group `yaml:"groups,omitempty"`
 		Families []Group `yaml:"families,omitempty"`
 
-		Title    string  `yaml:"title"`
+		Title    string   `yaml:"title"`
 		Metadata Metadata `yaml:"metadata"`
 
-		Extends []ArtifactMapping `yaml:"extends,omitempty"`
+		Extends []ArtifactMapping   `yaml:"extends,omitempty"`
 		Imports []MultiEntryMapping `yaml:"imports,omitempty"`
 
 		Controls []Control `yaml:"controls,omitempty"`
@@ -38,4 +38,3 @@ func (c *ControlCatalog) UnmarshalYAML(data []byte) error {
 
 	return nil
 }
-

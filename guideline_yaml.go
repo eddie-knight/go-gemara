@@ -8,23 +8,23 @@ func (g *Guideline) UnmarshalYAML(data []byte) error {
 	type guidelineYAML struct {
 		Id string `yaml:"id"`
 
-		Title    string   `yaml:"title"`
-		Objective string  `yaml:"objective"`
-		Group    string   `yaml:"group,omitempty"`
-		Family   string   `yaml:"family,omitempty"`
+		Title     string `yaml:"title"`
+		Objective string `yaml:"objective"`
+		Group     string `yaml:"group,omitempty"`
+		Family    string `yaml:"family,omitempty"`
 
-		Recommendations []string `yaml:"recommendations,omitempty"`
+		Recommendations []string      `yaml:"recommendations,omitempty"`
 		Extends         *EntryMapping `yaml:"extends,omitempty"`
-		Applicability   []string `yaml:"applicability,omitempty"`
-		Rationale       *Rationale `yaml:"rationale,omitempty"`
+		Applicability   []string      `yaml:"applicability,omitempty"`
+		Rationale       *Rationale    `yaml:"rationale,omitempty"`
 
-		Statements []Statement `yaml:"statements,omitempty"`
+		Statements []Statement         `yaml:"statements,omitempty"`
 		Principles []MultiEntryMapping `yaml:"principles,omitempty"`
-		Vectors     []MultiEntryMapping `yaml:"vectors,omitempty"`
-		SeeAlso     []string `yaml:"see-also,omitempty"`
+		Vectors    []MultiEntryMapping `yaml:"vectors,omitempty"`
+		SeeAlso    []string            `yaml:"see-also,omitempty"`
 
-		State       Lifecycle `yaml:"state"`
-		ReplacedBy  *EntryMapping `yaml:"replaced-by,omitempty"`
+		State      Lifecycle     `yaml:"state"`
+		ReplacedBy *EntryMapping `yaml:"replaced-by,omitempty"`
 	}
 
 	var tmp guidelineYAML
@@ -54,4 +54,3 @@ func (g *Guideline) UnmarshalYAML(data []byte) error {
 
 	return nil
 }
-

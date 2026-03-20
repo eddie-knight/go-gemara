@@ -13,7 +13,7 @@ import (
 
 func TestGuidance(t *testing.T) {
 	tempDir := t.TempDir()
-mockYAML := `
+	mockYAML := `
 metadata:
   id: Test
   title: Test
@@ -74,7 +74,7 @@ guidelines:
 func TestCatalog(t *testing.T) {
 	tempDir := t.TempDir()
 
-mockYAML := `
+	mockYAML := `
 metadata:
   id: Test
   title: Test
