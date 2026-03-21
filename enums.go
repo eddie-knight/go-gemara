@@ -54,6 +54,12 @@ type RiskAppetite int
 // ModType defines the type of modification to the assessment requirement.
 type ModType int
 
+// ResultType defines the nature of an audit result
+type ResultType int
+
+// EvidenceType categorizes the kind of evidence referenced in an audit
+type EvidenceType string
+
 const (
 	NotRun Result = iota
 	Passed
@@ -127,7 +133,8 @@ const (
 )
 
 const (
-	DispositionEnforced Disposition = iota
+	DispositionUndetermined Disposition = iota
+	DispositionEnforced
 	DispositionTolerated
 	DispositionClear
 )
@@ -159,6 +166,13 @@ const (
 	ModRemove
 	ModReplace
 	ModOverride
+)
+
+const (
+	ResultObservation ResultType = iota
+	ResultStrength
+	ResultFinding
+	ResultGap
 )
 
 var (
@@ -307,15 +321,17 @@ var (
 	}
 
 	dispositionToString = map[Disposition]string{
-		DispositionEnforced: "Enforced",
-		DispositionTolerated: "Tolerated",
-		DispositionClear:    "Clear",
+		DispositionUndetermined: "Undetermined",
+		DispositionEnforced:     "Enforced",
+		DispositionTolerated:    "Tolerated",
+		DispositionClear:        "Clear",
 	}
 
 	stringToDisposition = map[string]Disposition{
-		"Enforced":  DispositionEnforced,
-		"Tolerated": DispositionTolerated,
-		"Clear":     DispositionClear,
+		"Undetermined": DispositionUndetermined,
+		"Enforced":     DispositionEnforced,
+		"Tolerated":    DispositionTolerated,
+		"Clear":        DispositionClear,
 	}
 
 	severityToString = map[Severity]string{
@@ -374,6 +390,20 @@ var (
 		"Remove":   ModRemove,
 		"Replace":  ModReplace,
 		"Override": ModOverride,
+	}
+
+	resultTypeToString = map[ResultType]string{
+		ResultObservation: "Observation",
+		ResultStrength:    "Strength",
+		ResultFinding:     "Finding",
+		ResultGap:         "Gap",
+	}
+
+	stringToResultType = map[string]ResultType{
+		"Observation": ResultObservation,
+		"Strength":    ResultStrength,
+		"Finding":     ResultFinding,
+		"Gap":         ResultGap,
 	}
 )
 
@@ -800,6 +830,32 @@ func (m *ModType) UnmarshalYAML(data []byte) error {
 // UnmarshalJSON ensures that ModType can be deserialized from a JSON string
 func (m *ModType) UnmarshalJSON(data []byte) error {
 	return unmarshalJSONEnum(data, stringToModType, "ModType", m)
+}
+
+func (r ResultType) String() string {
+	if r, ok := resultTypeToString[r]; ok {
+		return r
+	}
+	return fmt.Sprintf("ResultType(%d)", r)
+}
+func (r ResultType) MarshalYAML() (interface{}, error) { return marshalYAMLString(r) }
+
+func (r ResultType) MarshalJSON() ([]byte, error) { return marshalJSONString(r) }
+
+func (r *ResultType) UnmarshalYAML(data []byte) error {
+	return unmarshalYAMLEnum(data, stringToResultType, "ResultType", r)
+}
+
+func (r *ResultType) UnmarshalJSON(data []byte) error {
+	return unmarshalJSONEnum(data, stringToResultType, "ResultType", r)
+}
+
+// ToArtifactType converts an EvidenceType to the corresponding ArtifactType.
+func (e EvidenceType) ToArtifactType() (ArtifactType, error) {
+	if at, ok := stringToArtifactType[string(e)]; ok {
+		return at, nil
+	}
+	return 0, unknownEnumStringError("ArtifactType", string(e), stringToArtifactType)
 }
 
 // UpdateAggregateResult compares the current result with the new result and returns the most severe of the two.

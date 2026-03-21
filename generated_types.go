@@ -2,57 +2,61 @@
 
 package gemara
 
-// CapabilityCatalog describes a collection of system capabilities
-type CapabilityCatalog struct {
-	// title describes the purpose of this catalog at a glance
-	Title string `json:"title" yaml:"title"`
+// AuditLog records results from an audit performed against a target resource
+type AuditLog struct {
+	// metadata provides detailed data about this log
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
-	// metadata provides detailed data about this catalog
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
+	// owner defines the RACI roles responsible for managing the audit
+	Owner RACI `json:"owner,omitempty" yaml:"owner,omitempty"`
 
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
+	// summary provides the high-level conclusion
+	Summary string `json:"summary" yaml:"summary"`
 
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
+	// criteria defines the acceptable state for the audited resource
+	Criteria []ArtifactMapping `json:"criteria" yaml:"criteria"`
 
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
+	// results records audit results against the criteria
+	Results []*AuditResult `json:"results" yaml:"results"`
 
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
+	// target identifies the resource being evaluated
+	Target Resource `json:"target" yaml:"target"`
+}
 
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
+// Metadata represents common metadata fields shared across all layers
+type Metadata struct {
+	// id allows this entry to be referenced by other elements
+	Id string `json:"id" yaml:"id"`
 
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
+	// type identifies the kind of Gemara artifact for unambiguous parsing
+	Type ArtifactType `json:"type" yaml:"type"`
 
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
+	// gemara-version declares which version of the Gemara specification this artifact conforms to
+	GemaraVersion string `json:"gemara-version" yaml:"gemara-version"`
 
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
+	// version is the version identifier of this artifact
+	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
+	// date is the publication or effective date of this artifact
+	Date Datetime `json:"date,omitempty" yaml:"date,omitempty"`
 
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	// description provides a high-level summary of the artifact's purpose and scope
+	Description string `json:"description" yaml:"description"`
 
-	// capabilities is a list of capabilities defined by this catalog
-	Capabilities []Capability `json:"capabilities,omitempty" yaml:"capabilities,omitempty"`
+	// author is the person or group primarily responsible for this artifact
+	Author Actor `json:"author" yaml:"author"`
 
-	// groups contains a list of groups that can be referenced by entries in this catalog
-	Groups []Group `json:"groups,omitempty" yaml:"groups,omitempty"`
+	// mapping-references is a list of external documents referenced within this artifact
+	MappingReferences []MappingReference `json:"mapping-references,omitempty" yaml:"mapping-references,omitempty"`
 
-	// extends references catalogs that this catalog builds upon
-	Extends []ArtifactMapping `json:"extends,omitempty" yaml:"extends,omitempty"`
+	// applicability-groups is a list of groups used to classify within this artifact to specify scope
+	ApplicabilityGroups []Group `json:"applicability-groups,omitempty" yaml:"applicability-groups,omitempty"`
 
-	Imports []MultiEntryMapping `json:"imports,omitempty" yaml:"imports,omitempty"`
+	// draft indicates whether this artifact is a pre-release version; open to modification
+	Draft bool `json:"draft,omitempty" yaml:"draft,omitempty"`
+
+	// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
+	Lexicon *ArtifactMapping `json:"lexicon,omitempty" yaml:"lexicon,omitempty"`
 }
 
 // Datetime represents an ISO 8601 formatted datetime string
@@ -135,6 +139,68 @@ type ArtifactMapping struct {
 	Remarks string `json:"remarks,omitempty" yaml:"remarks,omitempty"`
 }
 
+// RACI defines the roles responsible for managing an artifact
+type RACI struct {
+	// responsible identifies the entities responsible for executing work to manage or mitigate the artifact
+	Responsible []Contact `json:"responsible" yaml:"responsible"`
+
+	// accountable identifies the entity ultimately accountable for the outcome
+	Accountable []Contact `json:"accountable" yaml:"accountable"`
+
+	// consulted identifies entities whose input is required when assessing or responding to the artifact
+	Consulted []Contact `json:"consulted,omitempty" yaml:"consulted,omitempty"`
+
+	// informed identifies entities that should be notified about changes to the artifact status
+	Informed []Contact `json:"informed,omitempty" yaml:"informed,omitempty"`
+}
+
+// Resource represents an entity that exists in the system and can be evaluated
+type Resource struct {
+	// environment describes where the resource exists (e.g., production, staging, development, specific region)
+	Environment string `json:"environment,omitempty" yaml:"environment,omitempty"`
+
+	// id uniquely identifies the entity and allows this entry to be referenced by other elements
+	Id string `json:"id" yaml:"id"`
+
+	// name is the name of the entity
+	Name string `json:"name" yaml:"name"`
+
+	// owner is the contact information for the person or group responsible for managing or owning this resource
+	Owner Contact `json:"owner,omitempty" yaml:"owner,omitempty"`
+
+	// type specifies the type of entity interacting in the workflow
+	Type EntityType `json:"type" yaml:"type"`
+
+	// version is the version of the entity (for tools; if applicable)
+	Version string `json:"version,omitempty" yaml:"version,omitempty"`
+
+	// description provides additional context about the entity
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+
+	// uri is a general URI for the entity information
+	Uri string `json:"uri,omitempty" yaml:"uri,omitempty"`
+}
+
+// CapabilityCatalog describes a collection of system capabilities
+type CapabilityCatalog struct {
+	// title describes the purpose of this catalog at a glance
+	Title string `json:"title" yaml:"title"`
+
+	// metadata provides detailed data about this catalog
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
+
+	// capabilities is a list of capabilities defined by this catalog
+	Capabilities []Capability `json:"capabilities,omitempty" yaml:"capabilities,omitempty"`
+
+	// groups contains a list of groups that can be referenced by entries in this catalog
+	Groups []Group `json:"groups,omitempty" yaml:"groups,omitempty"`
+
+	// extends references catalogs that this catalog builds upon
+	Extends []ArtifactMapping `json:"extends,omitempty" yaml:"extends,omitempty"`
+
+	Imports []MultiEntryMapping `json:"imports,omitempty" yaml:"imports,omitempty"`
+}
+
 // Capability describes a system capability such as a feature, component or object.
 type Capability struct {
 	// id allows this entry to be referenced by other elements
@@ -168,40 +234,7 @@ type Catalog struct {
 	Title string `json:"title" yaml:"title"`
 
 	// metadata provides detailed data about this catalog
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type ArtifactType `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// groups contains a list of groups that can be referenced by entries in this catalog
 	Groups []Group `json:"groups,omitempty" yaml:"groups,omitempty"`
@@ -218,40 +251,7 @@ type ControlCatalog struct {
 	Title string `json:"title" yaml:"title"`
 
 	// metadata provides detailed data about this catalog
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// controls is a list of unique controls defined by this catalog
 	Controls []Control `json:"controls,omitempty" yaml:"controls,omitempty"`
@@ -331,80 +331,22 @@ type EntryMapping struct {
 // EnforcementLog records actions taken in response to noncompliance findings from Layer 5 evaluations.
 type EnforcementLog struct {
 	// metadata provides detailed data about this log
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// disposition is the aggregate enforcement disposition across all actions in this log
 	Disposition Disposition `json:"disposition" yaml:"disposition"`
 
+	// actions is the list of enforcement actions performed
+	//
 	// Enforce that Clear dispositions only contain Passed assessment results
-	Actions []*ActionLog `json:"actions" yaml:"actions"`
+	Actions []*ActionResult `json:"actions" yaml:"actions"`
 
 	// target identifies the resource being evaluated
 	Target Resource `json:"target" yaml:"target"`
 }
 
-// Resource represents an entity that exists in the system and can be evaluated
-type Resource struct {
-	// environment describes where the resource exists (e.g., production, staging, development, specific region)
-	Environment string `json:"environment,omitempty" yaml:"environment,omitempty"`
-
-	// id uniquely identifies the entity and allows this entry to be referenced by other elements
-	Id string `json:"id" yaml:"id"`
-
-	// name is the name of the entity
-	Name string `json:"name" yaml:"name"`
-
-	// owner is the contact information for the person or group responsible for managing or owning this resource
-	Owner Contact `json:"owner,omitempty" yaml:"owner,omitempty"`
-
-	// type specifies the type of entity interacting in the workflow
-	Type EntityType `json:"type" yaml:"type"`
-
-	// version is the version of the entity (for tools; if applicable)
-	Version string `json:"version,omitempty" yaml:"version,omitempty"`
-
-	// description provides additional context about the entity
-	Description string `json:"description,omitempty" yaml:"description,omitempty"`
-
-	// uri is a general URI for the entity information
-	Uri string `json:"uri,omitempty" yaml:"uri,omitempty"`
-}
-
-// ActionLog captures a performed enforcement action.
-type ActionLog struct {
+// ActionResult captures a performed enforcement action.
+type ActionResult struct {
 	// disposition is the enforcement action taken
 	Disposition Disposition `json:"disposition" yaml:"disposition"`
 
@@ -472,46 +414,10 @@ type Entity struct {
 	Uri string `json:"uri,omitempty" yaml:"uri,omitempty"`
 }
 
-// Email represents a validated email address pattern
-type Email string
-
 // EvaluationLog contains the results of evaluating a set of Layer 2 controls.
 type EvaluationLog struct {
 	// metadata provides detailed data about this log
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// result is the aggregate outcome across all evaluations in this log
 	Result Result `json:"result" yaml:"result"`
@@ -582,40 +488,7 @@ type GuidanceCatalog struct {
 	Title string `json:"title" yaml:"title"`
 
 	// metadata provides detailed data about this catalog
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// groups contains a list of groups that can be referenced by entries in this catalog
 	Groups []Group `json:"groups,omitempty" yaml:"groups,omitempty"`
@@ -720,61 +593,22 @@ type Exemption struct {
 	Redirect *MultiEntryMapping `json:"redirect,omitempty" yaml:"redirect,omitempty"`
 }
 
+// Log describes a set of recorded entries from a measurement activity
+type Log struct {
+	// metadata provides detailed data about this log
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
+
+	// target identifies the resource being evaluated
+	Target Resource `json:"target" yaml:"target"`
+}
+
 // MappingDocument captures the user's intent for how entries in a source artifact relate to entries in a target artifact
 type MappingDocument struct {
 	// title describes the purpose of this mapping document at a glance
 	Title string `json:"title" yaml:"title"`
 
 	// metadata provides detailed data about this document
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []struct {
-			// id allows this entry to be referenced by other elements
-			Id string `json:"id"`
-
-			// title describes the purpose of this mapping reference at a glance
-			Title string `json:"title"`
-
-			// version is the version identifier of the artifact being mapped to
-			Version string `json:"version"`
-
-			// description is prose regarding the artifact's purpose or content
-			Description string `json:"description,omitempty"`
-
-			// url is the path where the artifact may be retrieved; preferrably responds with Gemara-compatible YAML/JSON
-			Url string `json:"url,omitempty"`
-		} `json:"mapping-references"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// source-reference identifies the artifact being mapped from; must match a mapping-reference id
 	SourceReference ArtifactMapping `json:"source-reference" yaml:"source-reference"`
@@ -789,118 +623,11 @@ type MappingDocument struct {
 	Remarks string `json:"remarks,omitempty" yaml:"remarks,omitempty"`
 }
 
-// Mapping represents an atomic relationship between a source entry and an optional target entry
-type Mapping struct {
-	// id allows this mapping to be referenced by other elements
-	Id string `json:"id" yaml:"id"`
-
-	// source identifies the entry being mapped from
-	Source TypedEntry `json:"source" yaml:"source"`
-
-	// target identifies the entry being mapped to; absent when relationship is no-match
-	Target *TypedEntry `json:"target,omitempty" yaml:"target,omitempty"`
-
-	// relationship describes the nature or purpose of the mapping
-	Relationship RelationshipType `json:"relationship" yaml:"relationship"`
-
-	// strength is the author's estimate of how completely the source entry satisfies the target entry; range 1-10
-	Strength int64 `json:"strength,omitempty" yaml:"strength,omitempty"`
-
-	ConfidenceLevel ConfidenceLevel `json:"confidence-level,omitempty" yaml:"confidence-level,omitempty"`
-
-	// applicability constrains the contexts in which this mapping holds
-	Applicability []string `json:"applicability,omitempty" yaml:"applicability,omitempty"`
-
-	// rationale explains why this relationship exists
-	Rationale string `json:"rationale,omitempty" yaml:"rationale,omitempty"`
-
-	// remarks is general prose regarding this mapping
-	Remarks string `json:"remarks,omitempty" yaml:"remarks,omitempty"`
-}
-
-// EntryReference identifies a specific entry within a referenced artifact
-type TypedEntry struct {
-	// entry-id identifies the specific entry in the referenced artifact
-	EntryId string `json:"entry-id" yaml:"entry-id"`
-
-	// entry-type identifies what kind of atomic unit this entry is
-	EntryType EntryType `json:"entry-type" yaml:"entry-type"`
-}
-
-// Metadata represents common metadata fields shared across all layers
-type Metadata struct {
-	// id allows this entry to be referenced by other elements
-	Id string `json:"id" yaml:"id"`
-
-	// type identifies the kind of Gemara artifact for unambiguous parsing
-	Type ArtifactType `json:"type" yaml:"type"`
-
-	// gemara-version declares which version of the Gemara specification this artifact conforms to
-	GemaraVersion string `json:"gemara-version" yaml:"gemara-version"`
-
-	// version is the version identifier of this artifact
-	Version string `json:"version,omitempty" yaml:"version,omitempty"`
-
-	// date is the publication or effective date of this artifact
-	Date Datetime `json:"date,omitempty" yaml:"date,omitempty"`
-
-	// description provides a high-level summary of the artifact's purpose and scope
-	Description string `json:"description" yaml:"description"`
-
-	// author is the person or group primarily responsible for this artifact
-	Author Actor `json:"author" yaml:"author"`
-
-	// mapping-references is a list of external documents referenced within this artifact
-	MappingReferences []MappingReference `json:"mapping-references,omitempty" yaml:"mapping-references,omitempty"`
-
-	// applicability-groups is a list of groups used to classify within this artifact to specify scope
-	ApplicabilityGroups []Group `json:"applicability-groups,omitempty" yaml:"applicability-groups,omitempty"`
-
-	// draft indicates whether this artifact is a pre-release version; open to modification
-	Draft bool `json:"draft,omitempty" yaml:"draft,omitempty"`
-
-	// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-	Lexicon *ArtifactMapping `json:"lexicon,omitempty" yaml:"lexicon,omitempty"`
-}
-
 // Policy represents a policy document with metadata, contacts, scope, imports, implementation plan, risks, and adherence requirements.
 type Policy struct {
 	Title string `json:"title" yaml:"title"`
 
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	Contacts RACI `json:"contacts" yaml:"contacts"`
 
@@ -913,21 +640,6 @@ type Policy struct {
 	Risks Risks `json:"risks,omitempty" yaml:"risks,omitempty"`
 
 	Adherence Adherence `json:"adherence" yaml:"adherence"`
-}
-
-// RACI defines the roles responsible for managing an artifact
-type RACI struct {
-	// responsible identifies the entities responsible for executing work to manage or mitigate the artifact
-	Responsible []Contact `json:"responsible" yaml:"responsible"`
-
-	// accountable identifies the entity ultimately accountable for the outcome
-	Accountable []Contact `json:"accountable" yaml:"accountable"`
-
-	// consulted identifies entities whose input is required when assessing or responding to the artifact
-	Consulted []Contact `json:"consulted,omitempty" yaml:"consulted,omitempty"`
-
-	// informed identifies entities that should be notified about changes to the artifact status
-	Informed []Contact `json:"informed,omitempty" yaml:"informed,omitempty"`
 }
 
 // Scope defines what is included and excluded from policy applicability.
@@ -1124,6 +836,98 @@ type Parameter struct {
 	AcceptedValues []string `json:"accepted-values,omitempty" yaml:"accepted-values,omitempty"`
 }
 
+// PrincipleCatalog describes a set of related principles and relevant metadata
+type PrincipleCatalog struct {
+	// title describes the purpose of this catalog at a glance
+	Title string `json:"title" yaml:"title"`
+
+	// metadata provides detailed data about this catalog
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
+
+	// groups contains a list of groups that can be referenced by entries in this catalog
+	Groups []Group `json:"groups,omitempty" yaml:"groups,omitempty"`
+
+	// extends references catalogs that this catalog builds upon
+	Extends []ArtifactMapping `json:"extends,omitempty" yaml:"extends,omitempty"`
+
+	Imports []MultiEntryMapping `json:"imports,omitempty" yaml:"imports,omitempty"`
+
+	// principles is a list of unique principles defined by this catalog
+	Principles []Principle `json:"principles,omitempty" yaml:"principles,omitempty"`
+}
+
+// Principle represents a foundational value or tenet that guides governance, design, and operational decisions
+type Principle struct {
+	// id allows this entry to be referenced by other elements
+	Id string `json:"id" yaml:"id"`
+
+	// title describes the principle at a glance
+	Title string `json:"title" yaml:"title"`
+
+	// description explains the principle and its expected outcomes
+	Description string `json:"description" yaml:"description"`
+
+	// rationale provides the context for this principle
+	Rationale string `json:"rationale,omitempty" yaml:"rationale,omitempty"`
+}
+
+// Email represents a validated email address pattern
+type Email string
+
+// AuditResult records a single result with supporting evidence and recommendations.
+type AuditResult struct {
+	// id uniquely identifies this result
+	Id string `json:"id" yaml:"id"`
+
+	// title describes this result at a glance
+	Title string `json:"title" yaml:"title"`
+
+	// type classifies the nature of this result
+	Type ResultType `json:"type" yaml:"type"`
+
+	// description explains the result in detail
+	Description string `json:"description" yaml:"description"`
+
+	// criteria-reference maps this result to specific criteria entries
+	Criteria_reference MultiEntryMapping `json:"criteria-reference" yaml:"criteria-reference"`
+
+	// evidence records the data sources that support this result
+	Evidence []Evidence `json:"evidence,omitempty" yaml:"evidence,omitempty"`
+
+	// recommendations records corrective actions for this result
+	Recommendations []Recommendation `json:"recommendations,omitempty" yaml:"recommendations,omitempty"`
+}
+
+// Evidence records a specific data source consulted during an audit
+type Evidence struct {
+	// id uniquely identifies this evidence
+	Id string `json:"id,omitempty" yaml:"id,omitempty"`
+
+	// type categorizes the kind of evidence
+	Type EvidenceType `json:"type" yaml:"type"`
+
+	// collected is the timestamp when the evidence was gathered
+	Collected Datetime `json:"collected" yaml:"collected"`
+
+	// location references the artifact containing this evidence
+	Location ArtifactMapping `json:"location" yaml:"location"`
+
+	// description explains what this evidence represents
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+}
+
+// Recommendation provides a corrective action for an audit result
+type Recommendation struct {
+	// id uniquely identifies this recommendation
+	Id string `json:"id,omitempty" yaml:"id,omitempty"`
+
+	// text describes the recommended corrective action
+	Text string `json:"text" yaml:"text"`
+
+	// required indicates whether this recommendation is a mandatory corrective action
+	Required bool `json:"required" yaml:"required"`
+}
+
 // A RiskCatalog is a structured collection of documented risks that may affect an organization,
 // system, or service. It provides a centralized reference for risks that can be mapped to threats
 // and referenced by policies when documenting how those risks are mitigated or accepted.
@@ -1132,45 +936,12 @@ type RiskCatalog struct {
 	Title string `json:"title" yaml:"title"`
 
 	// metadata provides detailed data about this catalog
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// groups narrows the base groups to risk categories with appetite and severity boundaries
 	//
 	// groups contains a list of groups that can be referenced by entries in this catalog
-	Groups []any/* TODO: IncompleteKind: _|_ */ `json:"groups,omitempty" yaml:"groups,omitempty"`
+	Groups []RiskCategory `json:"groups,omitempty" yaml:"groups,omitempty"`
 
 	// extends references catalogs that this catalog builds upon
 	Extends []ArtifactMapping `json:"extends,omitempty" yaml:"extends,omitempty"`
@@ -1179,6 +950,25 @@ type RiskCatalog struct {
 
 	// risks is a list of risks defined by this catalog
 	Risks []Risk `json:"risks,omitempty" yaml:"risks,omitempty"`
+}
+
+// RiskCategory describes a grouping of risks and defines appetite boundaries
+type RiskCategory struct {
+	// appetite defines the acceptable level of risk for this category
+	Appetite RiskAppetite `json:"appetite" yaml:"appetite"`
+
+	// id allows this entry to be referenced by other elements
+	Id string `json:"id" yaml:"id"`
+
+	// max-severity defines the risk tolerance boundary: the highest severity
+	// the organization will accept within this category
+	MaxSeverity Severity `json:"max-severity,omitempty" yaml:"max-severity,omitempty"`
+
+	// title describes the purpose of this group at a glance
+	Title string `json:"title" yaml:"title"`
+
+	// description explains the significance and traits of entries to this group
+	Description string `json:"description" yaml:"description"`
 }
 
 // A Risk represents the potential for negative impact resulting from one or more threats.
@@ -1208,65 +998,13 @@ type Risk struct {
 	Threats []MultiEntryMapping `json:"threats,omitempty" yaml:"threats,omitempty"`
 }
 
-// RiskCategory describes a grouping of risks and defines appetite boundaries
-type RiskCategory struct {
-	// appetite defines the acceptable level of risk for this category
-	Appetite RiskAppetite `json:"appetite" yaml:"appetite"`
-
-	// id allows this entry to be referenced by other elements
-	Id string `json:"id" yaml:"id"`
-
-	// max-severity defines the risk tolerance boundary: the highest severity
-	// the organization will accept within this category
-	MaxSeverity Severity `json:"max-severity,omitempty" yaml:"max-severity,omitempty"`
-
-	// title describes the purpose of this group at a glance
-	Title string `json:"title" yaml:"title"`
-
-	// description explains the significance and traits of entries to this group
-	Description string `json:"description" yaml:"description"`
-}
-
 // ThreatCatalog describes a set of topically-associated threats
 type ThreatCatalog struct {
 	// title describes the purpose of this catalog at a glance
 	Title string `json:"title" yaml:"title"`
 
 	// metadata provides detailed data about this catalog
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// groups contains a list of groups that can be referenced by entries in this catalog
 	Groups []Group `json:"groups,omitempty" yaml:"groups,omitempty"`
@@ -1309,40 +1047,7 @@ type VectorCatalog struct {
 	Title string `json:"title" yaml:"title"`
 
 	// metadata provides detailed data about this catalog
-	Metadata struct {
-		// id allows this entry to be referenced by other elements
-		Id string `json:"id"`
-
-		// type identifies the kind of Gemara artifact for unambiguous parsing
-		Type string `json:"type"`
-
-		// gemara-version declares which version of the Gemara specification this artifact conforms to
-		GemaraVersion string `json:"gemara-version"`
-
-		// version is the version identifier of this artifact
-		Version string `json:"version,omitempty"`
-
-		// date is the publication or effective date of this artifact
-		Date Datetime `json:"date,omitempty"`
-
-		// description provides a high-level summary of the artifact's purpose and scope
-		Description string `json:"description"`
-
-		// author is the person or group primarily responsible for this artifact
-		Author Actor `json:"author"`
-
-		// mapping-references is a list of external documents referenced within this artifact
-		MappingReferences []MappingReference `json:"mapping-references,omitempty"`
-
-		// applicability-groups is a list of groups used to classify within this artifact to specify scope
-		ApplicabilityGroups []Group `json:"applicability-groups,omitempty"`
-
-		// draft indicates whether this artifact is a pre-release version; open to modification
-		Draft bool `json:"draft,omitempty"`
-
-		// lexicon is a URI pointing to a controlled vocabulary or glossary relevant to this artifact
-		Lexicon *ArtifactMapping `json:"lexicon,omitempty"`
-	} `json:"metadata" yaml:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// groups contains a list of groups that can be referenced by entries in this catalog
 	Groups []Group `json:"groups,omitempty" yaml:"groups,omitempty"`
@@ -1374,11 +1079,40 @@ type Vector struct {
 	Applicability []string `json:"applicability,omitempty" yaml:"applicability,omitempty"`
 }
 
-// Log describes a set of recorded entries from a measurement activity
-type Log struct {
-	// metadata provides detailed data about this log
-	Metadata Metadata `json:"metadata" yaml:"metadata"`
+// Mapping represents an atomic relationship between a source entry and an optional target entry
+type Mapping struct {
+	// id allows this mapping to be referenced by other elements
+	Id string `json:"id" yaml:"id"`
 
-	// target identifies the resource being evaluated
-	Target Resource `json:"target" yaml:"target"`
+	// source identifies the entry being mapped from
+	Source TypedEntry `json:"source" yaml:"source"`
+
+	// target identifies the entry being mapped to; absent when relationship is no-match
+	Target *TypedEntry `json:"target,omitempty" yaml:"target,omitempty"`
+
+	// relationship describes the nature or purpose of the mapping
+	Relationship RelationshipType `json:"relationship" yaml:"relationship"`
+
+	// strength is the author's estimate of how completely the source entry satisfies the target entry; range 1-10
+	Strength int64 `json:"strength,omitempty" yaml:"strength,omitempty"`
+
+	ConfidenceLevel ConfidenceLevel `json:"confidence-level,omitempty" yaml:"confidence-level,omitempty"`
+
+	// applicability constrains the contexts in which this mapping holds
+	Applicability []string `json:"applicability,omitempty" yaml:"applicability,omitempty"`
+
+	// rationale explains why this relationship exists
+	Rationale string `json:"rationale,omitempty" yaml:"rationale,omitempty"`
+
+	// remarks is general prose regarding this mapping
+	Remarks string `json:"remarks,omitempty" yaml:"remarks,omitempty"`
+}
+
+// EntryReference identifies a specific entry within a referenced artifact
+type TypedEntry struct {
+	// entry-id identifies the specific entry in the referenced artifact
+	EntryId string `json:"entry-id" yaml:"entry-id"`
+
+	// entry-type identifies what kind of atomic unit this entry is
+	EntryType EntryType `json:"entry-type" yaml:"entry-type"`
 }

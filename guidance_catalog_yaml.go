@@ -8,13 +8,13 @@ import "github.com/goccy/go-yaml"
 // - `document-type` -> `type`
 func (g *GuidanceCatalog) UnmarshalYAML(data []byte) error {
 	type guidanceCatalogYAML struct {
-		Title       string `yaml:"title"`
-		Metadata    Metadata `yaml:"metadata"`
-		Extends     []ArtifactMapping `yaml:"extends,omitempty"`
-		Imports     []MultiEntryMapping `yaml:"imports,omitempty"`
+		Title    string              `yaml:"title"`
+		Metadata Metadata            `yaml:"metadata"`
+		Extends  []ArtifactMapping   `yaml:"extends,omitempty"`
+		Imports  []MultiEntryMapping `yaml:"imports,omitempty"`
 
 		// Current schema uses `type`, older test data uses `document-type`.
-		Type        GuidanceType `yaml:"type,omitempty"`
+		Type         GuidanceType `yaml:"type,omitempty"`
 		DocumentType GuidanceType `yaml:"document-type,omitempty"`
 
 		FrontMatter string `yaml:"front-matter,omitempty"`
@@ -52,4 +52,3 @@ func (g *GuidanceCatalog) UnmarshalYAML(data []byte) error {
 
 	return nil
 }
-
