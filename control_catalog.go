@@ -1,25 +1,43 @@
-// SPDX-License-Identifier: Apache-2.0
-
 package gemara
 
 import "sync"
 
-// SugarControlCatalog wraps the generated ControlCatalog with
+// SugaredControlCatalog wraps the generated ControlCatalog with
 // pre-built indexes for efficient group, control, and requirement lookups.
-type SugarControlCatalog struct {
+type SugaredControlCatalog struct {
 	ControlCatalog
 
-	groupsOnce        sync.Once
-	groupsCache       []string
+	groupsOnce  sync.Once
+	groupsCache []string
 
-	controlsOnce      sync.Once
-	controlsCache     map[string][]Control
+	sugarControlsOnce  sync.Once
+	sugarControlsCache []*SugaredControl
+
+	controlsByGroupOnce  sync.Once
+	controlsByGroupCache map[string][]*SugaredControl
 
 	requirementsOnce  sync.Once
 	requirementsCache map[string][]AssessmentRequirement
 }
 
-func (c *SugarControlCatalog) GetGroupNames() []string {
+// Sugar wraps this ControlCatalog in a SugaredControlCatalog for
+// convenient cached helper access.
+func (c ControlCatalog) Sugar() *SugaredControlCatalog {
+	return &SugaredControlCatalog{ControlCatalog: c}
+}
+
+// SugaredControls returns all controls as cached SugaredControl instances.
+func (c *SugaredControlCatalog) SugaredControls() []*SugaredControl {
+	c.sugarControlsOnce.Do(func() {
+		c.sugarControlsCache = make([]*SugaredControl, len(c.Controls))
+		for i := range c.Controls {
+			c.sugarControlsCache[i] = &SugaredControl{Control: c.Controls[i]}
+		}
+	})
+	return c.sugarControlsCache
+}
+
+func (c *SugaredControlCatalog) GetGroupNames() []string {
 	c.groupsOnce.Do(func() {
 		for _, group := range c.Groups {
 			c.groupsCache = append(c.groupsCache, group.Title)
@@ -28,19 +46,19 @@ func (c *SugarControlCatalog) GetGroupNames() []string {
 	return c.groupsCache
 }
 
-func (c *SugarControlCatalog) GetControlsForGroup(group string) []Control {
-	c.controlsOnce.Do(func() {
-		c.controlsCache = make(map[string][]Control)
-		for _, control := range c.Controls {
-			c.controlsCache[control.Group] = append(
-				c.controlsCache[control.Group], control,
+func (c *SugaredControlCatalog) GetControlsForGroup(group string) []*SugaredControl {
+	c.controlsByGroupOnce.Do(func() {
+		c.controlsByGroupCache = make(map[string][]*SugaredControl)
+		for _, sc := range c.SugaredControls() {
+			c.controlsByGroupCache[sc.Group] = append(
+				c.controlsByGroupCache[sc.Group], sc,
 			)
 		}
 	})
-	return c.controlsCache[group]
+	return c.controlsByGroupCache[group]
 }
 
-func (c *SugarControlCatalog) GetRequirementForApplicability(applicability string) []AssessmentRequirement {
+func (c *SugaredControlCatalog) GetRequirementForApplicability(applicability string) []AssessmentRequirement {
 	c.requirementsOnce.Do(func() {
 		c.requirementsCache = make(map[string][]AssessmentRequirement)
 		for _, control := range c.Controls {

@@ -1,19 +1,23 @@
-// SPDX-License-Identifier: Apache-2.0
-
 package gemara
 
 import "sync"
 
-// SugarControl wraps the generated Control with cached
+// SugaredControl wraps the generated Control with cached
 // cross-reference lookups.
-type SugarControl struct {
+type SugaredControl struct {
 	Control
 
 	referencesOnce  sync.Once
 	referencesCache []string
 }
 
-func (c *SugarControl) GetMappingReferences() []string {
+// Sugar wraps this Control in a SugaredControl for convenient
+// cached helper access.
+func (c Control) Sugar() *SugaredControl {
+	return &SugaredControl{Control: c}
+}
+
+func (c *SugaredControl) GetMappingReferences() []string {
 	c.referencesOnce.Do(func() {
 		for _, ref := range c.Guidelines {
 			c.referencesCache = append(c.referencesCache, ref.ReferenceId)
