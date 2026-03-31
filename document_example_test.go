@@ -15,12 +15,12 @@ func ExampleGuidanceCatalog() {
 ---
 **Front Matter:** {{ .FrontMatter }}
 ---
-{{- $doc := . }}{{ range .Families }}
+{{- $doc := . }}{{ range .Groups }}
 
 ### {{ .Title }} ({{ .Id }})
 {{ .Description }}
 #### Guidelines:
-{{- $familyId := .Id }}{{ range $doc.Guidelines }}{{ if eq .Family $familyId }}
+{{- $familyId := .Id }}{{ range $doc.Guidelines }}{{ if eq .Group $familyId }}
 
 ##### {{ .Title }} ({{ .Id }})
 **Objective:** {{ .Objective }}

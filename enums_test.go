@@ -1,6 +1,7 @@
 package gemara
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -232,6 +233,43 @@ func TestMethodTypeString(t *testing.T) {
 	}
 }
 
+func TestModeTypeString(t *testing.T) {
+	tests := []struct {
+		v        ModeType
+		expected string
+	}{
+		{ModeManual, "Manual"},
+		{ModeAutomated, "Automated"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			if got := tt.v.String(); got != tt.expected {
+				t.Errorf("String() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDispositionString(t *testing.T) {
+	tests := []struct {
+		v        Disposition
+		expected string
+	}{
+		{DispositionEnforced, "Enforced"},
+		{DispositionTolerated, "Tolerated"},
+		{DispositionClear, "Clear"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			if got := tt.v.String(); got != tt.expected {
+				t.Errorf("String() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestSeverityString(t *testing.T) {
 	tests := []struct {
 		v        Severity
@@ -327,6 +365,48 @@ func TestEntityTypeString(t *testing.T) {
 	}
 }
 
+func TestResultStringUnknownValue(t *testing.T) {
+	// Out-of-range or unknown int should not return empty string
+	const unknown Result = 99
+	got := unknown.String()
+	if got == "" {
+		t.Error("String() for unknown Result should not return empty string")
+	}
+	if !strings.Contains(got, "99") {
+		t.Errorf("String() for unknown Result should include numeric value, got %q", got)
+	}
+}
+
+func TestResultTypeStringUnknownValue(t *testing.T) {
+	const unknown ResultType = 99
+	got := unknown.String()
+	if got == "" {
+		t.Error("String() for unknown ResultType should not return empty string")
+	}
+	if !strings.Contains(got, "99") {
+		t.Errorf("String() for unknown ResultType should include numeric value, got %q", got)
+	}
+}
+
+func TestResultTypeString(t *testing.T) {
+	tests := []struct {
+		v        ResultType
+		expected string
+	}{
+		{ResultObservation, "Observation"},
+		{ResultStrength, "Strength"},
+		{ResultFinding, "Finding"},
+		{ResultGap, "Gap"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			if got := tt.v.String(); got != tt.expected {
+				t.Errorf("String() = %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestLifecycleMarshalUnmarshalJSON(t *testing.T) {
 	var l Lifecycle
 	if err := l.UnmarshalJSON([]byte(`"Draft"`)); err != nil {
@@ -378,14 +458,90 @@ func TestRelationshipTypeUnmarshalJSONInvalid(t *testing.T) {
 	}
 }
 
-func TestResultStringUnknownValue(t *testing.T) {
-	// Out-of-range or unknown int should not return empty string
-	const unknown Result = 99
-	got := unknown.String()
-	if got == "" {
-		t.Error("String() for unknown Result should not return empty string")
+func TestResultTypeMarshalUnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		value    ResultType
+		jsonRepr string
+	}{
+		{ResultObservation, `"Observation"`},
+		{ResultStrength, `"Strength"`},
+		{ResultFinding, `"Finding"`},
+		{ResultGap, `"Gap"`},
 	}
-	if !strings.Contains(got, "99") {
-		t.Errorf("String() for unknown Result should include numeric value, got %q", got)
+	for _, tt := range tests {
+		t.Run(tt.jsonRepr, func(t *testing.T) {
+			out, err := tt.value.MarshalJSON()
+			if err != nil {
+				t.Fatalf("MarshalJSON: %v", err)
+			}
+			if string(out) != tt.jsonRepr {
+				t.Errorf("MarshalJSON = %s, want %s", out, tt.jsonRepr)
+			}
+
+			var got ResultType
+			if err := got.UnmarshalJSON(out); err != nil {
+				t.Fatalf("UnmarshalJSON: %v", err)
+			}
+			if got != tt.value {
+				t.Errorf("UnmarshalJSON round-trip: got %v, want %v", got, tt.value)
+			}
+		})
+	}
+}
+
+func TestEvidenceTypeToArtifactType(t *testing.T) {
+	tests := []struct {
+		name     string
+		ev       EvidenceType
+		expected ArtifactType
+		wantErr  bool
+	}{
+		{"ControlCatalog", EvidenceType("ControlCatalog"), ControlCatalogArtifact, false},
+		{"EvaluationLog", EvidenceType("EvaluationLog"), EvaluationLogArtifact, false},
+		{"GuidanceCatalog", EvidenceType("GuidanceCatalog"), GuidanceCatalogArtifact, false},
+		{"MappingDocument", EvidenceType("MappingDocument"), MappingDocumentArtifact, false},
+		{"Policy", EvidenceType("Policy"), PolicyArtifact, false},
+		{"ThreatCatalog", EvidenceType("ThreatCatalog"), ThreatCatalogArtifact, false},
+		{"VectorCatalog", EvidenceType("VectorCatalog"), VectorCatalogArtifact, false},
+		{"RiskCatalog", EvidenceType("RiskCatalog"), RiskCatalogArtifact, false},
+		{"invalid value", EvidenceType("not-an-artifact"), 0, true},
+		{"empty string", EvidenceType(""), 0, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.ev.ToArtifactType()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ToArtifactType() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got != tt.expected {
+				t.Errorf("ToArtifactType() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestEvidenceTypeJSONRoundTrip(t *testing.T) {
+	type wrapper struct {
+		Type EvidenceType `json:"type"`
+	}
+
+	tests := []string{"document", "interview", "automated-scan", "custom-value"}
+	for _, val := range tests {
+		t.Run(val, func(t *testing.T) {
+			input := wrapper{Type: EvidenceType(val)}
+			data, err := json.Marshal(input)
+			if err != nil {
+				t.Fatalf("Marshal: %v", err)
+			}
+
+			var got wrapper
+			if err := json.Unmarshal(data, &got); err != nil {
+				t.Fatalf("Unmarshal: %v", err)
+			}
+			if got.Type != input.Type {
+				t.Errorf("round-trip: got %q, want %q", got.Type, input.Type)
+			}
+		})
 	}
 }

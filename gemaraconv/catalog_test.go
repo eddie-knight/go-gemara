@@ -25,7 +25,7 @@ var testCases = []struct {
 				Version: "devel",
 			},
 			Title: "Test Catalog",
-			Families: []gemara.Group{
+			Groups: []gemara.Group{
 				{
 					Id:          "AC",
 					Title:       "access-control",
@@ -34,9 +34,9 @@ var testCases = []struct {
 			},
 			Controls: []gemara.Control{
 				{
-					Id:     "AC-01",
-					Family: "AC",
-					Title:  "Access Control Policy",
+					Id:    "AC-01",
+					Group: "AC",
+					Title: "Access Control Policy",
 					AssessmentRequirements: []gemara.AssessmentRequirement{
 						{
 							Id:   "AC-01.1",
@@ -58,7 +58,7 @@ var testCases = []struct {
 				Version: "devel",
 			},
 			Title: "Test Catalog Multiple",
-			Families: []gemara.Group{
+			Groups: []gemara.Group{
 				{
 					Id:          "AC",
 					Title:       "access-control",
@@ -72,9 +72,9 @@ var testCases = []struct {
 			},
 			Controls: []gemara.Control{
 				{
-					Id:     "AC-01",
-					Family: "AC",
-					Title:  "Access Control Policy",
+					Id:    "AC-01",
+					Group: "AC",
+					Title: "Access Control Policy",
 					AssessmentRequirements: []gemara.AssessmentRequirement{
 						{
 							Id:   "AC-01.1",
@@ -83,9 +83,9 @@ var testCases = []struct {
 					},
 				},
 				{
-					Id:     "BR-01",
-					Family: "BR",
-					Title:  "Business Requirements Policy",
+					Id:    "BR-01",
+					Group: "BR",
+					Title: "Business Requirements Policy",
 					AssessmentRequirements: []gemara.AssessmentRequirement{
 						{
 							Id:   "BR-01.1",
@@ -128,10 +128,10 @@ func TestFromCatalog(t *testing.T) {
 			assert.NotEmpty(t, oscalCatalog.UUID)
 			assert.Equal(t, tt.expectedTitle, oscalCatalog.Metadata.Title)
 			assert.Equal(t, tt.catalog.Metadata.Version, oscalCatalog.Metadata.Version)
-			assert.Equal(t, len(tt.catalog.Families), len(*oscalCatalog.Groups))
+			assert.Equal(t, len(tt.catalog.Groups), len(*oscalCatalog.Groups))
 
 			// Compare each control family
-			for i, family := range tt.catalog.Families {
+			for i, family := range tt.catalog.Groups {
 				groups := (*oscalCatalog.Groups)
 				group := groups[i]
 				assert.Equal(t, family.Id, group.ID)

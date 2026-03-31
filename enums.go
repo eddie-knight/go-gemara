@@ -33,6 +33,15 @@ type RelationshipType int
 // MethodType enumerates the category of evaluation or enforcement method.
 type MethodType int
 
+// ModeType enumerates whether enforcement/evaluation is manual or automated.
+type ModeType int
+
+// Disposition enumerates the possible enforcement outcomes.
+type Disposition int
+
+// EnforcementStep is a reference to the code path that performed an enforcement action.
+type EnforcementStep string
+
 // Severity defines the allowed impact levels for a risk.
 type Severity int
 
@@ -44,6 +53,12 @@ type RiskAppetite int
 
 // ModType defines the type of modification to the assessment requirement.
 type ModType int
+
+// ResultType defines the nature of an audit result
+type ResultType int
+
+// EvidenceType categorizes the kind of evidence referenced in an audit
+type EvidenceType string
 
 const (
 	NotRun Result = iota
@@ -113,6 +128,18 @@ const (
 )
 
 const (
+	ModeManual ModeType = iota
+	ModeAutomated
+)
+
+const (
+	DispositionUndetermined Disposition = iota
+	DispositionEnforced
+	DispositionTolerated
+	DispositionClear
+)
+
+const (
 	SeverityLow Severity = iota
 	SeverityMedium
 	SeverityHigh
@@ -139,6 +166,13 @@ const (
 	ModRemove
 	ModReplace
 	ModOverride
+)
+
+const (
+	ResultObservation ResultType = iota
+	ResultStrength
+	ResultFinding
+	ResultGap
 )
 
 var (
@@ -276,6 +310,30 @@ var (
 		"Gate":            MethodGate,
 	}
 
+	modeTypeToString = map[ModeType]string{
+		ModeManual:    "Manual",
+		ModeAutomated: "Automated",
+	}
+
+	stringToModeType = map[string]ModeType{
+		"Manual":    ModeManual,
+		"Automated": ModeAutomated,
+	}
+
+	dispositionToString = map[Disposition]string{
+		DispositionUndetermined: "Undetermined",
+		DispositionEnforced:     "Enforced",
+		DispositionTolerated:    "Tolerated",
+		DispositionClear:        "Clear",
+	}
+
+	stringToDisposition = map[string]Disposition{
+		"Undetermined": DispositionUndetermined,
+		"Enforced":     DispositionEnforced,
+		"Tolerated":    DispositionTolerated,
+		"Clear":        DispositionClear,
+	}
+
 	severityToString = map[Severity]string{
 		SeverityLow:      "Low",
 		SeverityMedium:   "Medium",
@@ -332,6 +390,20 @@ var (
 		"Remove":   ModRemove,
 		"Replace":  ModReplace,
 		"Override": ModOverride,
+	}
+
+	resultTypeToString = map[ResultType]string{
+		ResultObservation: "Observation",
+		ResultStrength:    "Strength",
+		ResultFinding:     "Finding",
+		ResultGap:         "Gap",
+	}
+
+	stringToResultType = map[string]ResultType{
+		"Observation": ResultObservation,
+		"Strength":    ResultStrength,
+		"Finding":     ResultFinding,
+		"Gap":         ResultGap,
 	}
 )
 
@@ -598,6 +670,60 @@ func (m *MethodType) UnmarshalJSON(data []byte) error {
 	return unmarshalJSONEnum(data, stringToMethodType, "MethodType", m)
 }
 
+func (m ModeType) String() string {
+	if s, ok := modeTypeToString[m]; ok {
+		return s
+	}
+	return fmt.Sprintf("ModeType(%d)", m)
+}
+
+// MarshalYAML ensures that ModeType is serialized as a string in YAML
+func (m ModeType) MarshalYAML() (interface{}, error) {
+	return marshalYAMLString(m)
+}
+
+// MarshalJSON ensures that ModeType is serialized as a string in JSON
+func (m ModeType) MarshalJSON() ([]byte, error) {
+	return marshalJSONString(m)
+}
+
+// UnmarshalYAML ensures that ModeType can be deserialized from a YAML string
+func (m *ModeType) UnmarshalYAML(data []byte) error {
+	return unmarshalYAMLEnum(data, stringToModeType, "ModeType", m)
+}
+
+// UnmarshalJSON ensures that ModeType can be deserialized from a JSON string
+func (m *ModeType) UnmarshalJSON(data []byte) error {
+	return unmarshalJSONEnum(data, stringToModeType, "ModeType", m)
+}
+
+func (d Disposition) String() string {
+	if s, ok := dispositionToString[d]; ok {
+		return s
+	}
+	return fmt.Sprintf("Disposition(%d)", d)
+}
+
+// MarshalYAML ensures that Disposition is serialized as a string in YAML
+func (d Disposition) MarshalYAML() (interface{}, error) {
+	return marshalYAMLString(d)
+}
+
+// MarshalJSON ensures that Disposition is serialized as a string in JSON
+func (d Disposition) MarshalJSON() ([]byte, error) {
+	return marshalJSONString(d)
+}
+
+// UnmarshalYAML ensures that Disposition can be deserialized from a YAML string
+func (d *Disposition) UnmarshalYAML(data []byte) error {
+	return unmarshalYAMLEnum(data, stringToDisposition, "Disposition", d)
+}
+
+// UnmarshalJSON ensures that Disposition can be deserialized from a JSON string
+func (d *Disposition) UnmarshalJSON(data []byte) error {
+	return unmarshalJSONEnum(data, stringToDisposition, "Disposition", d)
+}
+
 func (s Severity) String() string {
 	if str, ok := severityToString[s]; ok {
 		return str
@@ -704,6 +830,32 @@ func (m *ModType) UnmarshalYAML(data []byte) error {
 // UnmarshalJSON ensures that ModType can be deserialized from a JSON string
 func (m *ModType) UnmarshalJSON(data []byte) error {
 	return unmarshalJSONEnum(data, stringToModType, "ModType", m)
+}
+
+func (r ResultType) String() string {
+	if r, ok := resultTypeToString[r]; ok {
+		return r
+	}
+	return fmt.Sprintf("ResultType(%d)", r)
+}
+func (r ResultType) MarshalYAML() (interface{}, error) { return marshalYAMLString(r) }
+
+func (r ResultType) MarshalJSON() ([]byte, error) { return marshalJSONString(r) }
+
+func (r *ResultType) UnmarshalYAML(data []byte) error {
+	return unmarshalYAMLEnum(data, stringToResultType, "ResultType", r)
+}
+
+func (r *ResultType) UnmarshalJSON(data []byte) error {
+	return unmarshalJSONEnum(data, stringToResultType, "ResultType", r)
+}
+
+// ToArtifactType converts an EvidenceType to the corresponding ArtifactType.
+func (e EvidenceType) ToArtifactType() (ArtifactType, error) {
+	if at, ok := stringToArtifactType[string(e)]; ok {
+		return at, nil
+	}
+	return 0, unknownEnumStringError("ArtifactType", string(e), stringToArtifactType)
 }
 
 // UpdateAggregateResult compares the current result with the new result and returns the most severe of the two.

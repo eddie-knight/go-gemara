@@ -1,6 +1,8 @@
 package loaders
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -149,11 +151,21 @@ func TestLoadNotAURL(t *testing.T) {
 }
 
 func TestLoadYAML_HTTPS(t *testing.T) {
+	// Use a local HTTPS server so this test suite never makes network calls.
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("title: Access Control\n"))
+	}))
+	defer srv.Close()
+
+	originalTransport := http.DefaultTransport
+	http.DefaultTransport = srv.Client().Transport
+	defer func() { http.DefaultTransport = originalTransport }()
+
 	type FauxCatalog struct {
 		Title string `yaml:"title"`
 	}
 	var target FauxCatalog
-	err := LoadYAML("https://raw.githubusercontent.com/ossf/security-baseline/refs/heads/main/baseline/OSPS-AC.yaml", &target)
+	err := LoadYAML(srv.URL+"/baseline/OSPS-AC.yaml", &target)
 	if err != nil {
 		t.Errorf("LoadYAML() error = %v, wantErr %v", err, false)
 	}
@@ -163,8 +175,16 @@ func TestLoadYAML_HTTPS(t *testing.T) {
 }
 
 func TestLoadInvalidURL(t *testing.T) {
+	// Verify we return an error for a non-200 response without hitting the network.
+	srv := httptest.NewTLSServer(http.NotFoundHandler())
+	defer srv.Close()
+
+	originalTransport := http.DefaultTransport
+	http.DefaultTransport = srv.Client().Transport
+	defer func() { http.DefaultTransport = originalTransport }()
+
 	var target dummyStruct
-	err := LoadYAML("https://invalid.url/doesnotexist.yaml", &target)
+	err := LoadYAML(srv.URL+"/doesnotexist.yaml", &target)
 	if err == nil {
 		t.Errorf("LoadYAML() error = %v, wantErr %v", err, true)
 	}
@@ -206,8 +226,16 @@ func TestLoadJSON_UnsupportedScheme(t *testing.T) {
 }
 
 func TestLoadJSON_InvalidURL(t *testing.T) {
+	// Verify we return an error for a non-200 response without hitting the network.
+	srv := httptest.NewTLSServer(http.NotFoundHandler())
+	defer srv.Close()
+
+	originalTransport := http.DefaultTransport
+	http.DefaultTransport = srv.Client().Transport
+	defer func() { http.DefaultTransport = originalTransport }()
+
 	var target dummyStruct
-	err := LoadJSON("https://invalid.url/doesnotexist.json", &target)
+	err := LoadJSON(srv.URL+"/doesnotexist.json", &target)
 	if err == nil {
 		t.Errorf("LoadJSON() error = %v, wantErr %v", err, true)
 	}
