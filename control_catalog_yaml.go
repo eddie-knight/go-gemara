@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 package gemara
 
 import "github.com/goccy/go-yaml"
@@ -32,8 +34,6 @@ func (c *ControlCatalog) UnmarshalYAML(data []byte) error {
 	c.Title = tmp.Title
 	c.Metadata = tmp.Metadata
 	c.Extends = tmp.Extends
-
-	// Keep imports exactly as decoded (nil vs empty can matter to tests).
 	c.Imports = tmp.Imports
 
 	return nil
