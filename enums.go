@@ -218,20 +218,20 @@ var (
 	}
 
 	artifactTypeToString = map[ArtifactType]string{
-		InvalidArtifact:             "Invalid",
-		AuditLogArtifact:            "AuditLog",
-		CapabilityCatalogArtifact:   "CapabilityCatalog",
-		ControlCatalogArtifact:      "ControlCatalog",
-		EnforcementLogArtifact:      "EnforcementLog",
-		EvaluationLogArtifact:       "EvaluationLog",
-		GuidanceCatalogArtifact:     "GuidanceCatalog",
-		LexiconArtifact:             "Lexicon",
-		MappingDocumentArtifact:     "MappingDocument",
-		PolicyArtifact:              "Policy",
-		PrincipleCatalogArtifact:    "PrincipleCatalog",
-		RiskCatalogArtifact:         "RiskCatalog",
-		ThreatCatalogArtifact:       "ThreatCatalog",
-		VectorCatalogArtifact:       "VectorCatalog",
+		InvalidArtifact:           "Invalid",
+		AuditLogArtifact:          "AuditLog",
+		CapabilityCatalogArtifact: "CapabilityCatalog",
+		ControlCatalogArtifact:    "ControlCatalog",
+		EnforcementLogArtifact:    "EnforcementLog",
+		EvaluationLogArtifact:     "EvaluationLog",
+		GuidanceCatalogArtifact:   "GuidanceCatalog",
+		LexiconArtifact:           "Lexicon",
+		MappingDocumentArtifact:   "MappingDocument",
+		PolicyArtifact:            "Policy",
+		PrincipleCatalogArtifact:  "PrincipleCatalog",
+		RiskCatalogArtifact:       "RiskCatalog",
+		ThreatCatalogArtifact:     "ThreatCatalog",
+		VectorCatalogArtifact:     "VectorCatalog",
 	}
 
 	stringToArtifactType = map[string]ArtifactType{
