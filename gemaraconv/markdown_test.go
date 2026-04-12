@@ -158,6 +158,7 @@ func TestCatalogToMarkdown_extendsImportsReplacedBy(t *testing.T) {
 			Author:        gemara.Actor{Name: "Author", Type: gemara.Human},
 			MappingReferences: []gemara.MappingReference{
 				{Id: "ext", Title: "External", Version: "1", Url: "https://example.com"},
+				{Id: "imp", Title: "Imported Catalog", Version: "2", Url: "https://example.com/imported"},
 			},
 		},
 		Title: "Complex",
@@ -232,7 +233,10 @@ func TestCatalogToMarkdown_extendsImportsReplacedBy(t *testing.T) {
 	assert.Contains(t, s, "## Extends")
 	assert.Contains(t, s, "- base — extends base")
 	assert.Contains(t, s, "## Imports")
-	assert.Contains(t, s, "**imp**")
+	assert.Contains(t, s, "### imp: Imported Catalog")
+	assert.Contains(t, s, "imported")
+	assert.Contains(t, s, "**Source:** [https://example.com/imported](https://example.com/imported)")
+	assert.Contains(t, s, "#### e1 — r1")
 	assert.Contains(t, s, "### Mapping References")
 	assert.NotContains(t, s, "### C-HIDDEN")
 	assert.Contains(t, s, "### C1: Control one")
