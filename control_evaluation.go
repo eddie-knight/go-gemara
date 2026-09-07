@@ -38,10 +38,10 @@ func (c *ControlEvaluation) Evaluate(targetData interface{}, userApplicability [
 			}
 		}
 		if applicable {
-			// Run refuses a decoded log without recording why, precisely so it
-			// does not overwrite the record. Read the reason here instead, and
-			// leave the assessment untouched. Every other refusal (a nil step,
-			// a missing field) is left to Run, which records it in the assessment.
+			// Run refuses a decoded log without recording why, so the reason is
+			// read here and surfaces on the control only. Other refusals (a nil
+			// step, a missing field) go through Run, which records them in the
+			// assessment.
 			if assessment.decoded() {
 				aggregateResult := UpdateAggregateResult(c.Result, Unknown)
 				if aggregateResult != c.Result {

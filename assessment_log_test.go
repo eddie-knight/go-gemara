@@ -708,9 +708,8 @@ func TestAssessmentStepRoundTrip(t *testing.T) {
 }
 
 // TestDecodedLogRefusalIsInert checks that Run leaves a decoded log exactly as it
-// was decoded. A decoded log is the record of a run that already happened, so
-// reporting "cannot be re-run" into its own result, message and confidence
-// destroyed the record the caller loaded.
+// was decoded. A decoded log is the record of a run that already happened;
+// writing the refusal into it would destroy that record.
 func TestDecodedLogRefusalIsInert(t *testing.T) {
 	const wire = `{"requirement":{"reference-id":"","entry-id":"r"},"description":"d",` +
 		`"result":"Passed","message":"all checks passed","applicability":["a"],` +

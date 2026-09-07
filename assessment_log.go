@@ -18,12 +18,10 @@ type AssessmentStep func(payload interface{}) (Result, string, ConfidenceLevel)
 // stepNameProbe is the sentinel payload that asks a decoded step for its name.
 type stepNameProbe struct{}
 
-// decodedStep is the step a log decodes into. AssessmentStep is a function type,
-// so the recorded name has nowhere to live but inside the function itself: the
-// closure captures it and returns it when probed.
-//
-// A function is not recoverable from its name, so a decoded step reports Unknown
-// rather than pretending to assess anything.
+// decodedStep is the step a recorded name decodes into. AssessmentStep is a
+// function type, so the name has nowhere to live but inside the closure, which
+// returns it when probed. A function is not recoverable from its name, so any
+// other payload gets Unknown rather than a pretend assessment.
 func decodedStep(name string) AssessmentStep {
 	return func(payload interface{}) (Result, string, ConfidenceLevel) {
 		if _, ok := payload.(stepNameProbe); ok {
@@ -35,10 +33,9 @@ func decodedStep(name string) AssessmentStep {
 
 const decodedStepMessage = "assessment step was decoded from a log, which records step names only, and cannot be re-run"
 
-// decodedStepPC is the code pointer every closure returned by decodedStep shares,
-// which is how String tells a decoded step from one a consumer wrote. A toolchain
-// that stopped sharing it would break that identification; the round-trip test
-// is what catches it.
+// decodedStepPC is the code pointer shared by every closure decodedStep returns;
+// isDecoded compares against it. reflect does not promise this identity, so
+// TestAssessmentStepRoundTrip guards it.
 var decodedStepPC = reflect.ValueOf(decodedStep("")).Pointer()
 
 // isDecoded reports whether the step came from a log rather than from a consumer.
@@ -122,16 +119,14 @@ func (as AssessmentStep) String() string {
 // UnmarshalYAML reads the step name the log recorded. The spec declares the wire
 // type as a string (evaluationlog.cue: `#AssessmentStep: string`).
 //
-// UnmarshalText below would satisfy goccy on its own, so this method exists for
-// its diagnostics: goccy reports the source position and the offending type only
-// when the target implements its BytesUnmarshaler. Without it a malformed step
-// fails with "does not implemented Unmarshaler" and no line or column, instead of
-// "[1:1] cannot unmarshal []interface {} into Go struct field .Steps of type
-// string" with the offending line quoted.
+// UnmarshalText alone would satisfy goccy/go-yaml, but goccy reports the source
+// position and offending type only when the target implements its
+// BytesUnmarshaler. This method exists for that diagnostic;
+// TestMalformedStepDiagnostics locks it in.
 func (as *AssessmentStep) UnmarshalYAML(data []byte) error {
-	// goccy passes no bytes for a YAML null (null, ~, or an empty value) and
-	// two for an explicit "", so this leaves a null nil without disturbing a
-	// genuinely empty name.
+	// goccy passes zero bytes for a YAML null and the two quote characters for
+	// an explicit "", so returning here keeps a null step nil without losing
+	// an empty name.
 	if len(data) == 0 {
 		return nil
 	}
@@ -147,12 +142,10 @@ func (as *AssessmentStep) UnmarshalYAML(data []byte) error {
 // UnmarshalText decodes a step name for encoding/json and for the yaml.v3 family,
 // both of which honor encoding.TextUnmarshaler for scalar values.
 //
-// There is deliberately no UnmarshalJSON: it would only shadow this method with a
-// worse error, because decoding through an inner json.Unmarshal loses the field
-// path and type name encoding/json otherwise reports -- "cannot unmarshal number
-// into Go value of type string" in place of "cannot unmarshal number into
-// .steps.0 of type gemara.AssessmentStep". Both decoders skip this method for a
-// null, which leaves the step nil.
+// There is deliberately no UnmarshalJSON: encoding/json's own error names the
+// field path and type (.steps.0, gemara.AssessmentStep), and an inner
+// json.Unmarshal would lose both. Neither decoder calls this method for a null,
+// so a null step stays nil.
 func (as *AssessmentStep) UnmarshalText(data []byte) error {
 	*as = decodedStep(string(data))
 	return nil
@@ -220,9 +213,8 @@ func (a *AssessmentLog) runStep(targetData interface{}, step AssessmentStep) Res
 // Run returns Unknown and leaves every field, Message included, exactly as
 // decoded. Call Runnable first to learn why.
 func (a *AssessmentLog) Run(targetData interface{}) Result {
-	// This has to precede every assignment below, a.Result included: overwriting
-	// a completed record's result, message and confidence to report that it
-	// cannot be re-run destroys the very thing the caller loaded.
+	// Must precede every assignment below: a decoded log is a finished record,
+	// and writing the refusal into it would destroy what the caller loaded.
 	if a.decoded() {
 		return Unknown
 	}
@@ -275,8 +267,8 @@ func (a *AssessmentLog) precheck() error {
 		return errors.New(message)
 	}
 
-	// On Run's path a decoded log was already refused above, so a log reaching
-	// here was built in process and reporting into it is what it is for.
+	// Run refuses a decoded log before calling precheck, so any log reaching
+	// here was built in process and is safe to write to.
 	if err := a.Runnable(); err != nil {
 		a.Result = Unknown
 		a.Message = err.Error()
