@@ -856,3 +856,30 @@ func TestEvaluationLogFixtureRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, string(first), string(second), "re-encoding a loaded log must be lossless")
 }
+
+func TestNamedStep(t *testing.T) {
+	ran := false
+	step := NamedStep("pkg.checkThing", func(payload interface{}) (Result, string, ConfidenceLevel) {
+		ran = true
+		return Passed, "ok", High
+	})
+
+	assert.Equal(t, "pkg.checkThing", step.String())
+	assert.False(t, step.isDecoded())
+	require.NoError(t, (&AssessmentLog{Steps: []AssessmentStep{step}}).Runnable())
+
+	result, msg, conf := step(nil)
+	assert.True(t, ran)
+	assert.Equal(t, Passed, result)
+	assert.Equal(t, "ok", msg)
+	assert.Equal(t, High, conf)
+
+	out, err := codec.MarshalYAML([]AssessmentStep{step})
+	require.NoError(t, err)
+	assert.Equal(t, "- pkg.checkThing\n", string(out))
+
+	// A name without a function is a decoded step: named, but not runnable.
+	nameOnly := NamedStep("pkg.gone", nil)
+	assert.Equal(t, "pkg.gone", nameOnly.String())
+	assert.True(t, nameOnly.isDecoded())
+}

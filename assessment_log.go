@@ -33,14 +33,40 @@ func decodedStep(name string) AssessmentStep {
 
 const decodedStepMessage = "assessment step was decoded from a log, which records step names only, and cannot be re-run"
 
-// decodedStepPC is the code pointer shared by every closure decodedStep returns;
-// isDecoded compares against it. reflect does not promise this identity, so
-// TestAssessmentStepRoundTrip guards it.
-var decodedStepPC = reflect.ValueOf(decodedStep("")).Pointer()
+// NamedStep returns a step that runs fn and reports name from String. Use it
+// when a step has been wrapped in a closure, which erases the symbol String
+// would otherwise resolve, so the log records the wrapped function rather than
+// the wrapper. A nil fn yields a name-only step that, like a decoded one,
+// cannot be run.
+func NamedStep(name string, fn AssessmentStep) AssessmentStep {
+	if fn == nil {
+		return decodedStep(name)
+	}
+	return func(payload interface{}) (Result, string, ConfidenceLevel) {
+		if _, ok := payload.(stepNameProbe); ok {
+			return Unknown, name, Undetermined
+		}
+		return fn(payload)
+	}
+}
+
+// decodedStepPC and namedStepPC are the code pointers shared by every closure
+// decodedStep and NamedStep return; isDecoded and isNamed compare against them.
+// reflect does not promise this identity, so TestAssessmentStepRoundTrip and
+// TestNamedStep guard it.
+var (
+	decodedStepPC = reflect.ValueOf(decodedStep("")).Pointer()
+	namedStepPC   = reflect.ValueOf(NamedStep("", decodedStep(""))).Pointer()
+)
 
 // isDecoded reports whether the step came from a log rather than from a consumer.
 func (as AssessmentStep) isDecoded() bool {
 	return as != nil && reflect.ValueOf(as).Pointer() == decodedStepPC
+}
+
+// isNamed reports whether the step came from NamedStep.
+func (as AssessmentStep) isNamed() bool {
+	return as != nil && reflect.ValueOf(as).Pointer() == namedStepPC
 }
 
 // EvidenceCollector is an embeddable helper that gives a targetData payload the
@@ -104,7 +130,7 @@ type HasEvidence interface {
 
 func (as AssessmentStep) String() string {
 	// The recorded name lives inside the closure, not in its symbol.
-	if as.isDecoded() {
+	if as.isDecoded() || as.isNamed() {
 		_, name, _ := as(stepNameProbe{})
 		return name
 	}
