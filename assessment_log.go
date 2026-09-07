@@ -7,11 +7,44 @@ import (
 	"reflect"
 	"runtime"
 	"time"
+
+	"github.com/gemaraproj/go-gemara/internal/codec"
 )
 
 // AssessmentStep is a function type that inspects the provided targetData and returns a Result with a message and confidence level.
 // The message may be an error string or other descriptive text.
 type AssessmentStep func(payload interface{}) (Result, string, ConfidenceLevel)
+
+// stepNameProbe is the sentinel payload that asks a decoded step for its name.
+type stepNameProbe struct{}
+
+// decodedStep is the step a log decodes into. AssessmentStep is a function type,
+// so the recorded name has nowhere to live but inside the function itself: the
+// closure captures it and returns it when probed.
+//
+// A function is not recoverable from its name, so a decoded step reports Unknown
+// rather than pretending to assess anything.
+func decodedStep(name string) AssessmentStep {
+	return func(payload interface{}) (Result, string, ConfidenceLevel) {
+		if _, ok := payload.(stepNameProbe); ok {
+			return Unknown, name, Undetermined
+		}
+		return Unknown, decodedStepMessage, Undetermined
+	}
+}
+
+const decodedStepMessage = "assessment step was decoded from a log, which records step names only, and cannot be re-run"
+
+// decodedStepPC is the code pointer every closure returned by decodedStep shares,
+// which is how String tells a decoded step from one a consumer wrote. A toolchain
+// that stopped sharing it would break that identification; the round-trip test
+// is what catches it.
+var decodedStepPC = reflect.ValueOf(decodedStep("")).Pointer()
+
+// isDecoded reports whether the step came from a log rather than from a consumer.
+func (as AssessmentStep) isDecoded() bool {
+	return as != nil && reflect.ValueOf(as).Pointer() == decodedStepPC
+}
 
 // EvidenceCollector is an embeddable helper that gives a targetData payload the
 // well-known evidence location and satisfies HasEvidence via method promotion,
@@ -73,12 +106,56 @@ type HasEvidence interface {
 }
 
 func (as AssessmentStep) String() string {
+	// The recorded name lives inside the closure, not in its symbol.
+	if as.isDecoded() {
+		_, name, _ := as(stepNameProbe{})
+		return name
+	}
 	// Get the function pointer correctly
 	fn := runtime.FuncForPC(reflect.ValueOf(as).Pointer())
 	if fn == nil {
 		return "<unknown function>"
 	}
 	return fn.Name()
+}
+
+// UnmarshalYAML reads the step name the log recorded. The spec declares the wire
+// type as a string (evaluationlog.cue: `#AssessmentStep: string`).
+//
+// UnmarshalText below would satisfy goccy on its own, so this method exists for
+// its diagnostics: goccy reports the source position and the offending type only
+// when the target implements its BytesUnmarshaler. Without it a malformed step
+// fails with "does not implemented Unmarshaler" and no line or column, instead of
+// "[1:1] cannot unmarshal []interface {} into Go struct field .Steps of type
+// string" with the offending line quoted.
+func (as *AssessmentStep) UnmarshalYAML(data []byte) error {
+	// goccy passes no bytes for a YAML null (null, ~, or an empty value) and
+	// two for an explicit "", so this leaves a null nil without disturbing a
+	// genuinely empty name.
+	if len(data) == 0 {
+		return nil
+	}
+
+	var name string
+	if err := codec.UnmarshalYAML(data, &name); err != nil {
+		return err
+	}
+	*as = decodedStep(name)
+	return nil
+}
+
+// UnmarshalText decodes a step name for encoding/json and for the yaml.v3 family,
+// both of which honor encoding.TextUnmarshaler for scalar values.
+//
+// There is deliberately no UnmarshalJSON: it would only shadow this method with a
+// worse error, because decoding through an inner json.Unmarshal loses the field
+// path and type name encoding/json otherwise reports -- "cannot unmarshal number
+// into Go value of type string" in place of "cannot unmarshal number into
+// .steps.0 of type gemara.AssessmentStep". Both decoders skip this method for a
+// null, which leaves the step nil.
+func (as *AssessmentStep) UnmarshalText(data []byte) error {
+	*as = decodedStep(string(data))
+	return nil
 }
 
 func (as AssessmentStep) MarshalJSON() ([]byte, error) {
@@ -139,15 +216,30 @@ func (a *AssessmentLog) runStep(targetData interface{}, step AssessmentStep) Res
 // Failed or NotApplicable. Every other result aggregates into a.Result via
 // UpdateAggregateResult and execution continues.
 func (a *AssessmentLog) Run(targetData interface{}) Result {
+	// A decoded log is the record of a run that already happened, not a runnable
+	// assessment, so refuse it without writing to the fields it was decoded with.
+	// This has to precede every assignment below, a.Result included: overwriting
+	// a completed record's result, message and confidence to report that it
+	// cannot be re-run destroys the very thing the caller loaded. Callers that
+	// want the reason ask Runnable first.
+	for _, step := range a.Steps {
+		if step.isDecoded() {
+			return Unknown
+		}
+	}
+
 	a.Result = NotRun
 
-	a.Start = Datetime(time.Now().Format(time.RFC3339))
+	// Stamp Start only once precheck has passed, so a log refused below keeps
+	// the start and end it already had.
 	err := a.precheck()
 	if err != nil {
 		a.Result = Unknown
 		a.ConfidenceLevel = Undetermined
 		return a.Result
 	}
+
+	a.Start = Datetime(time.Now().Format(time.RFC3339))
 
 	// Stamp the end time on every path that ran at least one step, including the
 	// early returns below.
@@ -187,5 +279,32 @@ func (a *AssessmentLog) precheck() error {
 		return errors.New(message)
 	}
 
+	// Reaching here means the log was built in process rather than decoded, so it
+	// has no recorded state to protect and reporting into it is what it is for.
+	if err := a.Runnable(); err != nil {
+		a.Result = Unknown
+		a.Message = err.Error()
+		a.ConfidenceLevel = Undetermined
+		return err
+	}
+
+	return nil
+}
+
+// Runnable reports why the assessment cannot be executed, or nil if it can. It
+// does not modify the log, so a caller may ask before Run and decide what to do
+// with a log that Run will refuse.
+//
+// A log decoded from JSON or YAML records step names only, so its steps cannot be
+// re-run; a nil step would panic in runStep.
+func (a *AssessmentLog) Runnable() error {
+	for i, step := range a.Steps {
+		switch {
+		case step == nil:
+			return fmt.Errorf("step %d is nil", i)
+		case step.isDecoded():
+			return fmt.Errorf("%s: %q", decodedStepMessage, step)
+		}
+	}
 	return nil
 }
