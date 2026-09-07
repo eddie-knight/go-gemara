@@ -38,19 +38,6 @@ func (c *ControlEvaluation) Evaluate(targetData interface{}, userApplicability [
 			}
 		}
 		if applicable {
-			// Run refuses a decoded log without recording why, so the reason is
-			// read here and surfaces on the control only. Other refusals (a nil
-			// step, a missing field) go through Run, which records them in the
-			// assessment.
-			if assessment.decoded() {
-				aggregateResult := UpdateAggregateResult(c.Result, Unknown)
-				if aggregateResult != c.Result {
-					c.Message = assessment.Runnable().Error()
-				}
-				c.Result = aggregateResult
-				continue
-			}
-
 			result := assessment.Run(targetData)
 			aggregateResult := UpdateAggregateResult(c.Result, result)
 			if aggregateResult != c.Result {

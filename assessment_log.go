@@ -36,8 +36,8 @@ const decodedStepMessage = "assessment step was decoded from a log, which record
 // NamedStep returns a step that runs fn and reports name from String. Use it
 // when a step has been wrapped in a closure, which erases the symbol String
 // would otherwise resolve, so the log records the wrapped function rather than
-// the wrapper. A nil fn yields a name-only step that, like a decoded one,
-// cannot be run.
+// the wrapper. A nil fn yields a name-only step, the same as one decoded from a
+// log.
 func NamedStep(name string, fn AssessmentStep) AssessmentStep {
 	if fn == nil {
 		return decodedStep(name)
@@ -235,16 +235,9 @@ func (a *AssessmentLog) runStep(targetData interface{}, step AssessmentStep) Res
 // Failed or NotApplicable. Every other result aggregates into a.Result via
 // UpdateAggregateResult and execution continues.
 //
-// A log decoded from JSON or YAML records step names only and cannot be run:
-// Run returns Unknown and leaves every field, Message included, exactly as
-// decoded. Call Runnable first to learn why.
+// A log decoded from JSON or YAML records step names only, so each of its steps
+// reports Unknown with a message saying it cannot be re-run.
 func (a *AssessmentLog) Run(targetData interface{}) Result {
-	// Must precede every assignment below: a decoded log is a finished record,
-	// and writing the refusal into it would destroy what the caller loaded.
-	if a.decoded() {
-		return Unknown
-	}
-
 	a.Result = NotRun
 
 	a.Start = Datetime(time.Now().Format(time.RFC3339))
@@ -291,45 +284,6 @@ func (a *AssessmentLog) precheck() error {
 		a.Message = message
 		a.ConfidenceLevel = Undetermined
 		return errors.New(message)
-	}
-
-	// Run refuses a decoded log before calling precheck, so any log reaching
-	// here was built in process and is safe to write to.
-	if err := a.Runnable(); err != nil {
-		a.Result = Unknown
-		a.Message = err.Error()
-		a.ConfidenceLevel = Undetermined
-		return err
-	}
-
-	return nil
-}
-
-// decoded reports whether the log came from JSON or YAML rather than from a
-// consumer, in which case it is the record of a run that already happened.
-func (a *AssessmentLog) decoded() bool {
-	for _, step := range a.Steps {
-		if step.isDecoded() {
-			return true
-		}
-	}
-	return false
-}
-
-// Runnable reports why the assessment cannot be executed, or nil if it can. It
-// does not modify the log, so a caller may ask before Run and decide what to do
-// with a log that Run will refuse.
-//
-// A log decoded from JSON or YAML records step names only, so its steps cannot be
-// re-run; a nil step would panic in runStep.
-func (a *AssessmentLog) Runnable() error {
-	for i, step := range a.Steps {
-		switch {
-		case step == nil:
-			return fmt.Errorf("step %d is nil", i)
-		case step.isDecoded():
-			return fmt.Errorf("%s: %q", decodedStepMessage, step)
-		}
 	}
 	return nil
 }

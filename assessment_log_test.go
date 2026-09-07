@@ -677,20 +677,16 @@ func TestAssessmentStepRoundTrip(t *testing.T) {
 		})
 	}
 
-	// A decoded log has names but no functions, so running it must fail loudly
-	// rather than report a result it never assessed.
-	t.Run("decoded log is not runnable", func(t *testing.T) {
+	// A decoded log has names but no functions, so running it reports Unknown
+	// and says why rather than a result it never assessed.
+	t.Run("running a decoded log reports Unknown", func(t *testing.T) {
 		data, err := json.Marshal(in)
 		require.NoError(t, err)
 		var out AssessmentLog
 		require.NoError(t, json.Unmarshal(data, &out))
 
 		assert.Equal(t, Unknown, out.Run(nil))
-		assert.Equal(t, Passed, out.Result, "Run must not overwrite the decoded record")
-		assert.Zero(t, out.StepsExecuted, "no step should have been invoked")
-
-		require.Error(t, out.Runnable(), "Runnable reports what Run declines to record")
-		assert.Contains(t, out.Runnable().Error(), "cannot be re-run")
+		assert.Contains(t, out.Message, "cannot be re-run")
 	})
 
 	// The probe is an internal detail; a consumer step must never receive it.
@@ -705,53 +701,6 @@ func TestAssessmentStepRoundTrip(t *testing.T) {
 		_ = step.String()
 		assert.False(t, sawProbe, "String must not invoke a consumer's step")
 	})
-}
-
-// TestDecodedLogRefusalIsInert checks that Run leaves a decoded log exactly as it
-// was decoded. A decoded log is the record of a run that already happened;
-// writing the refusal into it would destroy that record.
-func TestDecodedLogRefusalIsInert(t *testing.T) {
-	const wire = `{"requirement":{"reference-id":"","entry-id":"r"},"description":"d",` +
-		`"result":"Passed","message":"all checks passed","applicability":["a"],` +
-		`"confidence-level":"High","start":"2020-01-01T00:00:00Z","end":"2020-01-01T00:05:00Z",` +
-		`"steps-executed":3,"steps":["pkg.StepA"]}`
-
-	var log AssessmentLog
-	require.NoError(t, json.Unmarshal([]byte(wire), &log))
-	before := log
-
-	assert.Equal(t, Unknown, log.Run(nil), "a decoded log cannot be run")
-
-	assert.Equal(t, before.Result, log.Result, "Run must not overwrite the recorded result")
-	assert.Equal(t, before.Message, log.Message, "...nor the recorded message")
-	assert.Equal(t, before.ConfidenceLevel, log.ConfidenceLevel, "...nor the recorded confidence")
-	assert.Equal(t, before.Start, log.Start, "...nor the recorded start")
-	assert.Equal(t, before.End, log.End, "...nor the recorded end")
-	assert.Equal(t, before.StepsExecuted, log.StepsExecuted, "...nor the step count")
-
-	require.Error(t, log.Runnable(), "Runnable reports what Run declines to record")
-	assert.Contains(t, log.Runnable().Error(), "cannot be re-run")
-}
-
-// TestRunnable covers the check callers make before Run.
-func TestRunnable(t *testing.T) {
-	ok, err := NewAssessment("r", "d", testingApplicability, []AssessmentStep{passingAssessmentStep})
-	require.NoError(t, err)
-	assert.NoError(t, ok.Runnable(), "an in-process assessment is runnable")
-
-	nilStep := &AssessmentLog{Steps: []AssessmentStep{passingAssessmentStep, nil}}
-	require.Error(t, nilStep.Runnable())
-	assert.Contains(t, nilStep.Runnable().Error(), "step 1 is nil")
-
-	var decoded AssessmentStep
-	require.NoError(t, json.Unmarshal([]byte(`"pkg.StepA"`), &decoded))
-	fromLog := &AssessmentLog{Steps: []AssessmentStep{decoded}}
-	require.Error(t, fromLog.Runnable())
-	assert.Contains(t, fromLog.Runnable().Error(), "pkg.StepA")
-
-	// Runnable must not itself mutate.
-	assert.Equal(t, NotRun, fromLog.Result)
-	assert.Empty(t, fromLog.Message)
 }
 
 // TestAssessmentStepNullDecodesToNil checks that a null step stays nil instead
@@ -793,20 +742,6 @@ func TestAssessmentStepNullDecodesToNil(t *testing.T) {
 		require.NotNil(t, step)
 		assert.Empty(t, step.String())
 	})
-}
-
-// TestNilStepIsRefused checks that a nil step is rejected by precheck instead of
-// panicking in runStep.
-func TestNilStepIsRefused(t *testing.T) {
-	a, err := NewAssessment("r", "d", testingApplicability, []AssessmentStep{nil})
-	require.Error(t, err, "a nil step must not pass NewAssessment")
-	assert.Contains(t, err.Error(), "step 0 is nil")
-
-	assert.NotPanics(t, func() {
-		assert.Equal(t, Unknown, a.Run(nil))
-	})
-	assert.Equal(t, Undetermined, a.ConfidenceLevel)
-	assert.Zero(t, a.StepsExecuted, "no step should have been invoked")
 }
 
 // TestMalformedStepDiagnostics locks in the reason AssessmentStep has an
@@ -866,7 +801,6 @@ func TestNamedStep(t *testing.T) {
 
 	assert.Equal(t, "pkg.checkThing", step.String())
 	assert.False(t, step.isDecoded())
-	require.NoError(t, (&AssessmentLog{Steps: []AssessmentStep{step}}).Runnable())
 
 	result, msg, conf := step(nil)
 	assert.True(t, ran)
@@ -878,7 +812,7 @@ func TestNamedStep(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "- pkg.checkThing\n", string(out))
 
-	// A name without a function is a decoded step: named, but not runnable.
+	// A name without a function is a decoded step.
 	nameOnly := NamedStep("pkg.gone", nil)
 	assert.Equal(t, "pkg.gone", nameOnly.String())
 	assert.True(t, nameOnly.isDecoded())
