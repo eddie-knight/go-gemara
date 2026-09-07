@@ -38,13 +38,14 @@ func (c *ControlEvaluation) Evaluate(targetData interface{}, userApplicability [
 			}
 		}
 		if applicable {
-			// Ask before running: Run refuses a decoded log without recording why,
-			// precisely so it does not overwrite the record. Read the reason here
-			// instead, and leave the assessment untouched.
-			if err := assessment.Runnable(); err != nil {
+			// Run refuses a decoded log without recording why, precisely so it
+			// does not overwrite the record. Read the reason here instead, and
+			// leave the assessment untouched. Every other refusal (a nil step,
+			// a missing field) is left to Run, which records it in the assessment.
+			if assessment.decoded() {
 				aggregateResult := UpdateAggregateResult(c.Result, Unknown)
 				if aggregateResult != c.Result {
-					c.Message = err.Error()
+					c.Message = assessment.Runnable().Error()
 				}
 				c.Result = aggregateResult
 				continue

@@ -215,31 +215,27 @@ func (a *AssessmentLog) runStep(targetData interface{}, step AssessmentStep) Res
 // Run executes the steps in order, halting early on the first step that returns
 // Failed or NotApplicable. Every other result aggregates into a.Result via
 // UpdateAggregateResult and execution continues.
+//
+// A log decoded from JSON or YAML records step names only and cannot be run:
+// Run returns Unknown and leaves every field, Message included, exactly as
+// decoded. Call Runnable first to learn why.
 func (a *AssessmentLog) Run(targetData interface{}) Result {
-	// A decoded log is the record of a run that already happened, not a runnable
-	// assessment, so refuse it without writing to the fields it was decoded with.
 	// This has to precede every assignment below, a.Result included: overwriting
 	// a completed record's result, message and confidence to report that it
-	// cannot be re-run destroys the very thing the caller loaded. Callers that
-	// want the reason ask Runnable first.
-	for _, step := range a.Steps {
-		if step.isDecoded() {
-			return Unknown
-		}
+	// cannot be re-run destroys the very thing the caller loaded.
+	if a.decoded() {
+		return Unknown
 	}
 
 	a.Result = NotRun
 
-	// Stamp Start only once precheck has passed, so a log refused below keeps
-	// the start and end it already had.
+	a.Start = Datetime(time.Now().Format(time.RFC3339))
 	err := a.precheck()
 	if err != nil {
 		a.Result = Unknown
 		a.ConfidenceLevel = Undetermined
 		return a.Result
 	}
-
-	a.Start = Datetime(time.Now().Format(time.RFC3339))
 
 	// Stamp the end time on every path that ran at least one step, including the
 	// early returns below.
@@ -279,8 +275,8 @@ func (a *AssessmentLog) precheck() error {
 		return errors.New(message)
 	}
 
-	// Reaching here means the log was built in process rather than decoded, so it
-	// has no recorded state to protect and reporting into it is what it is for.
+	// On Run's path a decoded log was already refused above, so a log reaching
+	// here was built in process and reporting into it is what it is for.
 	if err := a.Runnable(); err != nil {
 		a.Result = Unknown
 		a.Message = err.Error()
@@ -289,6 +285,17 @@ func (a *AssessmentLog) precheck() error {
 	}
 
 	return nil
+}
+
+// decoded reports whether the log came from JSON or YAML rather than from a
+// consumer, in which case it is the record of a run that already happened.
+func (a *AssessmentLog) decoded() bool {
+	for _, step := range a.Steps {
+		if step.isDecoded() {
+			return true
+		}
+	}
+	return false
 }
 
 // Runnable reports why the assessment cannot be executed, or nil if it can. It

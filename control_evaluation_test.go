@@ -289,3 +289,23 @@ func TestEvaluateDecodedAssessmentIsNonDestructive(t *testing.T) {
 	assert.Equal(t, "all checks passed", log.Message, "and its recorded message")
 	assert.Equal(t, High, log.ConfidenceLevel, "and its recorded confidence")
 }
+
+// TestEvaluateNilStepIsRecordedInAssessment checks that a nil step, unlike a
+// decoded log, is refused by Run and so records its reason in the assessment
+// as well as on the control.
+func TestEvaluateNilStepIsRecordedInAssessment(t *testing.T) {
+	log := &AssessmentLog{
+		Requirement:   EntryMapping{EntryId: "c-1"},
+		Description:   "d",
+		Applicability: []string{"a"},
+		Steps:         []AssessmentStep{nil},
+	}
+	control := &ControlEvaluation{Result: NotRun, AssessmentLogs: []*AssessmentLog{log}}
+
+	require.NotPanics(t, func() { control.Evaluate(nil, []string{"a"}) })
+
+	assert.Equal(t, Unknown, control.Result)
+	assert.Contains(t, control.Message, "step 0 is nil")
+	assert.Equal(t, Unknown, log.Result, "the assessment records its own refusal")
+	assert.Contains(t, log.Message, "step 0 is nil")
+}
