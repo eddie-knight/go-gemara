@@ -1,6 +1,7 @@
 package gemara
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -834,4 +835,25 @@ func TestMalformedStepDiagnostics(t *testing.T) {
 		assert.NotContains(t, err.Error(), "does not implemented Unmarshaler",
 			"goccy's fallback error carries no position; UnmarshalYAML exists to avoid it")
 	})
+}
+
+// TestEvaluationLogFixtureRoundTrip is the fixture-level counterpart of
+// TestAssessmentStepRoundTrip: a log as a plugin emits it, step names included,
+// must load through the public loader and survive a re-encode unchanged.
+func TestEvaluationLogFixtureRoundTrip(t *testing.T) {
+	log, err := Load[EvaluationLog](context.Background(), fileFetcher, "test-data/good-evaluation-log.yaml")
+	require.NoError(t, err)
+
+	require.Len(t, log.Evaluations, 2)
+	steps := log.Evaluations[1].AssessmentLogs[0].Steps
+	require.Len(t, steps, 3)
+	assert.Equal(t, "github.com/revanite-io/pvtr-github-repo/evaluation_plans/osps/docs.hasUserGuides", steps[2].String())
+
+	first, err := codec.MarshalYAML(log)
+	require.NoError(t, err)
+	var again EvaluationLog
+	require.NoError(t, codec.UnmarshalYAML(first, &again))
+	second, err := codec.MarshalYAML(again)
+	require.NoError(t, err)
+	assert.Equal(t, string(first), string(second), "re-encoding a loaded log must be lossless")
 }
