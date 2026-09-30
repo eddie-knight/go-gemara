@@ -69,9 +69,16 @@ func TestGuidanceToMarkdown_goodAIGFYAML(t *testing.T) {
 
 func TestGuidanceToMarkdown_options(t *testing.T) {
 	guidance := gemara.GuidanceCatalog{
-		Title:        "G",
-		Metadata:     gemara.Metadata{Version: "1"},
+		Title: "G",
+		Metadata: gemara.Metadata{
+			Version:           "1",
+			MappingReferences: []gemara.MappingReference{{Id: "imp", Title: "Imported Guidance", Version: "2", Url: "https://example.com/imported"}},
+		},
 		GuidanceType: gemara.GuidanceStandard,
+		// CRLF in source content must not leave triple newlines behind (Windows checkouts).
+		FrontMatter: "Intro\r\n\r\n",
+		Extends:     []gemara.ArtifactMapping{{ReferenceId: "base", Remarks: "extends base"}},
+		Imports:     []gemara.MultiEntryMapping{{ReferenceId: "imp", Remarks: "imported", Entries: []gemara.ArtifactMapping{{ReferenceId: "G-9", Remarks: "from imp"}}}},
 		Guidelines: []gemara.Guideline{
 			{Id: "G-2", Title: "Second", Objective: "o", SeeAlso: []string{"G-1", "NOPE"}},
 			{Id: "G-1", Title: "First", Objective: "o", State: gemara.LifecycleRetired},
@@ -84,6 +91,10 @@ func TestGuidanceToMarkdown_options(t *testing.T) {
 	assert.NotContains(t, s, "Table of contents")
 	assert.NotContains(t, s, "_Summary:")
 	assert.Contains(t, s, "\r\n")
+	assert.NotContains(t, s, "\r\n\r\n\r\n")
+	assert.Contains(t, s, "## Extends\r\n\r\nThis document builds upon all of the guidelines and applicability groups detailed in:\r\n\r\n- base — extends base")
+	assert.Contains(t, s, "## Imports\r\n\r\nThe following guidelines are imported from external catalogs. All relevant details for these guidelines can be found in the respective catalog's source.")
+	assert.Contains(t, s, "### imp: Imported Guidance\r\n\r\nimported\r\n\r\n**Source:** [https://example.com/imported](https://example.com/imported)\r\n\r\n#### G-9 — from imp")
 	assert.Contains(t, s, "## Ungrouped")
 	assert.NotContains(t, s, "### G-1", "retired guidelines are omitted")
 	assert.Contains(t, s, "**See also:** G-1, NOPE", "see-also to an absent heading stays plain text")

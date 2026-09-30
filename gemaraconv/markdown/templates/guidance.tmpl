@@ -15,7 +15,7 @@ Version: {{.Metadata.Version}}
 {{end}}
 
 {{define "guidance_metadata"}}{{template "metadata_intro" .}}
-_Summary: {{guidanceType .GuidanceType}} with {{.NumGuidelines}} guideline(s), {{.NumStatements}} statement(s)._
+_Summary: {{with guidanceType .GuidanceType}}{{if ne . "Invalid"}}{{.}}{{else}}Guidance{{end}}{{end}} with {{.NumGuidelines}} guideline(s), {{.NumStatements}} statement(s)._
 
 {{end}}
 

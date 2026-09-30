@@ -77,8 +77,10 @@ func render(ctx context.Context, meta gemara.Metadata, cfg Config, rootTemplate 
 		return nil, fmt.Errorf("execute markdown template: %w", err)
 	}
 
-	text := collapseExtraNewlines(buf.String())
-	text = strings.ReplaceAll(text, "\r\n", "\n")
+	// Normalise CRLF first: templates and fixtures may be checked out with CRLF
+	// (Windows autocrlf), and the collapse only recognises bare "\n" runs.
+	text := strings.ReplaceAll(buf.String(), "\r\n", "\n")
+	text = collapseExtraNewlines(text)
 	out := []byte(text)
 	if lineEnding != "\n" {
 		out = []byte(strings.ReplaceAll(string(out), "\n", lineEnding))

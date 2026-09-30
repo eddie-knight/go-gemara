@@ -28,9 +28,9 @@ _{{.Title}}_ is a Gemara{{if .Metadata.GemaraVersion}} {{.Metadata.GemaraVersion
 
 {{.Metadata.Description}}
 
-{{if .Metadata.ApplicabilityGroups}}### Requirement Applicability Groups
+{{if .Metadata.ApplicabilityGroups}}### Applicability Groups
 
-The following groups are used to specify the circumstance within which an assessment requirement is mandated.
+The following groups are used to specify the circumstances within which an entry applies.
 
 {{range .Metadata.ApplicabilityGroups}}- **{{.Id}}** — {{.Title}}: {{.Description}}
 {{end}}
@@ -57,7 +57,7 @@ The following groups are used to specify the circumstance within which an assess
 {{define "extends_imports"}}
 {{if .Extends}}## Extends
 
-This document builds upon all of the requirements and applicability groups detailed in:
+This document builds upon all of the {{.EntryNoun}} and applicability groups detailed in:
 
 {{range .Extends}}- {{artifactMapping .}}
 {{end}}
@@ -65,7 +65,7 @@ This document builds upon all of the requirements and applicability groups detai
 {{end}}
 {{if .Imports}}## Imports
 
-The following {{.ImportsNoun}} are imported from external catalogs. All relevant details for these {{.ImportsNoun}} can be found in the respective catalog's source.
+The following {{.EntryNoun}} are imported from external catalogs. All relevant details for these {{.EntryNoun}} can be found in the respective catalog's source.
 
 {{range .Imports}}### {{lexiconLink .ReferenceId}}{{if .Title}}: {{.Title}}{{end}}
 

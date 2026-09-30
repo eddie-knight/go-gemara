@@ -27,8 +27,8 @@ type markdownCatalogView struct {
 	ApplicabilityMatrixRows    []markdownApplicabilityMatrixRow
 	Extends                    []gemara.ArtifactMapping
 	Imports                    []markdownImportView
-	// ImportsNoun names what the Imports section imports ("controls").
-	ImportsNoun string
+	// EntryNoun names the catalog entries in the Extends and Imports prose ("controls").
+	EntryNoun   string
 	TOC         bool
 	LineEnding  string
 	Groups      []markdownGroupView
@@ -62,10 +62,9 @@ type markdownApplicabilityMatrixRow struct {
 
 // markdownTOCItem is one line in the table of contents (group or control).
 type markdownTOCItem struct {
-	Label   string
-	Anchor  string
-	Indent  int // 0 = group, 1 = control under group
-	Control bool
+	Label  string
+	Anchor string
+	Indent int // 0 = group, 1 = entry under group
 }
 
 // markdownImportView is one source in the resolved Imports section.
@@ -138,13 +137,12 @@ func buildMarkdownCatalogView(catalog gemara.ControlCatalog, cfg Config, lexGlos
 		if !cfg.TOC {
 			return
 		}
-		toc = append(toc, markdownTOCItem{Label: gv.Title, Anchor: gv.Anchor, Indent: 0, Control: false})
+		toc = append(toc, markdownTOCItem{Label: gv.Title, Anchor: gv.Anchor})
 		for _, ctl := range gv.Controls {
 			toc = append(toc, markdownTOCItem{
-				Label:   ctl.Id + ": " + ctl.Title,
-				Anchor:  Anchor(ctl.Id + ": " + ctl.Title),
-				Indent:  1,
-				Control: true,
+				Label:  ctl.Id + ": " + ctl.Title,
+				Anchor: Anchor(ctl.Id + ": " + ctl.Title),
+				Indent: 1,
 			})
 		}
 	}
@@ -196,7 +194,7 @@ func buildMarkdownCatalogView(catalog gemara.ControlCatalog, cfg Config, lexGlos
 		ApplicabilityMatrixRows:    applicabilityRows,
 		Extends:                    catalog.Extends,
 		Imports:                    buildImportViews(catalog.Imports, catalog.Metadata),
-		ImportsNoun:                "controls",
+		EntryNoun:                  "controls",
 		TOC:                        cfg.TOC,
 		LineEnding:                 cfg.LineEnding,
 		Groups:                     groups,

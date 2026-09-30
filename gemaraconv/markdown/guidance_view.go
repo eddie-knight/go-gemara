@@ -17,7 +17,7 @@ type markdownGuidanceView struct {
 	FrontMatter  string
 	Extends      []gemara.ArtifactMapping
 	Imports      []markdownImportView
-	ImportsNoun  string
+	EntryNoun    string
 	TOC          bool
 	LineEnding   string
 	Groups       []markdownGuidanceGroupView
@@ -93,7 +93,7 @@ func buildMarkdownGuidanceView(guidance gemara.GuidanceCatalog, cfg Config, lexG
 		}
 		toc = append(toc, markdownTOCItem{Label: gv.Title, Anchor: gv.Anchor})
 		for _, g := range src {
-			toc = append(toc, markdownTOCItem{Label: guidelineHeading(g), Anchor: anchors[g.Id], Indent: 1, Control: true})
+			toc = append(toc, markdownTOCItem{Label: guidelineHeading(g), Anchor: anchors[g.Id], Indent: 1})
 		}
 	}
 
@@ -124,7 +124,7 @@ func buildMarkdownGuidanceView(guidance gemara.GuidanceCatalog, cfg Config, lexG
 		FrontMatter:     guidance.FrontMatter,
 		Extends:         guidance.Extends,
 		Imports:         buildImportViews(guidance.Imports, guidance.Metadata),
-		ImportsNoun:     "guidelines",
+		EntryNoun:       "guidelines",
 		TOC:             cfg.TOC,
 		LineEnding:      cfg.LineEnding,
 		Groups:          groups,
