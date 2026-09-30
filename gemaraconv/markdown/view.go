@@ -27,12 +27,14 @@ type markdownCatalogView struct {
 	ApplicabilityMatrixRows    []markdownApplicabilityMatrixRow
 	Extends                    []gemara.ArtifactMapping
 	Imports                    []markdownImportView
-	TOC                        bool
-	LineEnding                 string
-	Groups                     []markdownGroupView
-	TOCItems                   []markdownTOCItem
-	NumControls                int
-	NumARs                     int
+	// ImportsNoun names what the Imports section imports ("controls").
+	ImportsNoun string
+	TOC         bool
+	LineEnding  string
+	Groups      []markdownGroupView
+	TOCItems    []markdownTOCItem
+	NumControls int
+	NumARs      int
 	// LexiconGlossary is non-empty when lexicon autolink loaded a valid document.
 	LexiconGlossary []markdownLexiconGlossaryEntry
 }
@@ -193,7 +195,8 @@ func buildMarkdownCatalogView(catalog gemara.ControlCatalog, cfg Config, lexGlos
 		ApplicabilityMatrixColumns: applicabilityCols,
 		ApplicabilityMatrixRows:    applicabilityRows,
 		Extends:                    catalog.Extends,
-		Imports:                    buildImportViews(catalog),
+		Imports:                    buildImportViews(catalog.Imports, catalog.Metadata),
+		ImportsNoun:                "controls",
 		TOC:                        cfg.TOC,
 		LineEnding:                 cfg.LineEnding,
 		Groups:                     groups,
@@ -206,16 +209,16 @@ func buildMarkdownCatalogView(catalog gemara.ControlCatalog, cfg Config, lexGlos
 
 // buildImportViews resolves each Import's ReferenceId against Metadata.MappingReferences
 // to populate the title and URL for the rendered imports section.
-func buildImportViews(catalog gemara.ControlCatalog) []markdownImportView {
-	if len(catalog.Imports) == 0 {
+func buildImportViews(imports []gemara.MultiEntryMapping, meta gemara.Metadata) []markdownImportView {
+	if len(imports) == 0 {
 		return nil
 	}
-	refMap := make(map[string]gemara.MappingReference, len(catalog.Metadata.MappingReferences))
-	for _, ref := range catalog.Metadata.MappingReferences {
+	refMap := make(map[string]gemara.MappingReference, len(meta.MappingReferences))
+	for _, ref := range meta.MappingReferences {
 		refMap[ref.Id] = ref
 	}
-	views := make([]markdownImportView, len(catalog.Imports))
-	for i, imp := range catalog.Imports {
+	views := make([]markdownImportView, len(imports))
+	for i, imp := range imports {
 		v := markdownImportView{
 			ReferenceId: imp.ReferenceId,
 			Remarks:     imp.Remarks,
