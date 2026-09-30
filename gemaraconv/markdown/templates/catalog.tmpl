@@ -65,7 +65,7 @@ This document builds upon all of the requirements and applicability groups detai
 {{end}}
 {{if .Imports}}## Imports
 
-The following {{.ImportsNoun}} are imported from external catalogs. All assessment requirements and other relevant details for these controls can be found in the respective catalog's source.
+The following {{.ImportsNoun}} are imported from external catalogs. All relevant details for these {{.ImportsNoun}} can be found in the respective catalog's source.
 
 {{range .Imports}}### {{lexiconLink .ReferenceId}}{{if .Title}}: {{.Title}}{{end}}
 
